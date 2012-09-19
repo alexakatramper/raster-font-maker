@@ -185,7 +185,7 @@ void FontMaker::removeCharRange( FT_UInt ch1, FT_UInt ch2 )
 int FontMaker::makeLayout()
 {
 	// 1.load glyphs & info
-	FT_BBox bbox;
+//	FT_BBox bbox;
 	CharInfo* ci = 0;
 	
 	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
@@ -198,10 +198,10 @@ int FontMaker::makeLayout()
 
 		FT_Load_Glyph( _face, glyph_index, FT_LOAD_DEFAULT );
 		FT_Get_Glyph( _face->glyph, &ci->glyph );
-		FT_Glyph_Get_CBox( ci->glyph, FT_GLYPH_BBOX_TRUNCATE, &bbox );
+//		FT_Glyph_Get_CBox( ci->glyph, FT_GLYPH_BBOX_TRUNCATE, &bbox );
 		
-		ci->width = _face->glyph->metrics.width / 64; //bbox.xMax - bbox.xMin;
-		ci->height = _face->glyph->metrics.height / 64; //bbox.yMax - bbox.yMin;
+		ci->width = _face->glyph->metrics.width / 64 + _padding * 2; //bbox.xMax - bbox.xMin;
+		ci->height = _face->glyph->metrics.height / 64 + _padding * 2; //bbox.yMax - bbox.yMin;
 		
 		ci->xoffset = 0; //bbox.xMin;
 		ci->yoffset = ( _face->glyph->metrics.height - _face->glyph->metrics.horiBearingY ) / 64; //bbox.yMin;
@@ -217,8 +217,6 @@ int FontMaker::makeLayout()
 	int maxHeight = 0;
 	
 	_lineHeight = 0;
-//	size_t lineStart = 0;
-//	size_t i = 0;
 	
 	vector<CharInfo*> charLine;
 	
@@ -226,17 +224,15 @@ int FontMaker::makeLayout()
 	{
 		ci = &(*it).second;
 		
-		if( ( x + ci->width + _padding * 2 ) > _imageWidth )
+		if( ( x + ci->width ) > _imageWidth )
 		{
-			// TODO: put chars of current line into vector
+			// put chars of current line into vector
 			// when the line is done - check if glyphs are not exeeded the page's height
 			// and move this line to new page if needed
 						
-			// check if line is not out of page bottom
-//			for( size_t j = lineStart; j < i; j++ )
 			for( size_t m = 0; m < charLine.size(); m++ )
 			{
-				if( ( charLine[m]->y + charLine[m]->height + _padding * 2 ) >= _imageHeight )
+				if( ( charLine[m]->y + charLine[m]->height * 2 ) >= _imageHeight )
 				{
 					++_pageCount;
 					y = 0;
@@ -244,7 +240,7 @@ int FontMaker::makeLayout()
 					for( size_t k = 0; k < charLine.size(); k++ )
 					{
 						charLine[k]->page = _pageCount;
-						charLine[k]->y = _padding;
+						charLine[k]->y = 0;
 					}
 					break;
 				}
@@ -258,15 +254,15 @@ int FontMaker::makeLayout()
 		}
 		
 		ci->page = _pageCount;
-		ci->x = x + _padding;
-		ci->y = y + _padding;
+		ci->x = x;
+		ci->y = y;
 		
-		x += ci->width + _padding * 2;
+		x += ci->width;
 		
-		if( maxHeight < ci->height + _padding * 2 )
-			maxHeight = ci->height + _padding * 2;
-		if( _lineHeight < ci->height + _padding * 2 )
-			_lineHeight = ci->height + _padding * 2;
+		if( maxHeight < ci->height )
+			maxHeight = ci->height;
+		if( _lineHeight < ci->height )
+			_lineHeight = ci->height;
 		
 		charLine.push_back( ci );
 	}
@@ -281,7 +277,7 @@ int FontMaker::makeLayout()
 			for( size_t k = 0; k < charLine.size(); k++ )
 			{
 				charLine[k]->page = _pageCount;
-				charLine[k]->y = _padding;
+				charLine[k]->y = 0;
 			}
 			break;
 		}
@@ -299,6 +295,18 @@ int FontMaker::makeLayout()
 //---------------------------------------------------------------------------------
 void FontMaker::drawPage( int page, int* abgr, int color )
 {
+	// clear image
+	memset( abgr, 0, _imageHeight * _imageWidth * sizeof( int ) );
+
+//	// for debug: fill background
+//	int* ptr = abgr;
+//	for( size_t i = 0; i < _imageHeight * _imageWidth; i++ )
+//	{
+//		*ptr = 0xFFFF0000;
+//		++ptr;
+//	}
+
+	
 	CharInfo* ci = 0;
 	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
 	{
@@ -317,7 +325,7 @@ void FontMaker::drawPage( int page, int* abgr, int color )
 		
 		// TODO: take xOffset/yOffset from glyph_bitmap
 		
-		int* dstPtr = &abgr[ ci->x + ci->y * _imageWidth ];
+		int* dstPtr = &abgr[ ci->x + _padding + ( ci->y + _padding ) * _imageWidth ];
 		
 				
 		// copy raster data
@@ -325,7 +333,7 @@ void FontMaker::drawPage( int page, int* abgr, int color )
 		
 		for( int y = 0; y < bitmap.rows; y++ )
 		{
-			int n = ci->x + ( ci->y + y ) * _imageWidth;
+			int n = ci->x + _padding + ( ci->y + _padding + y ) * _imageWidth;
 			
 			dstPtr = &abgr[ n ];
 			for( int x = 0; x < bitmap.width; x++ )
@@ -344,28 +352,28 @@ void FontMaker::drawPage( int page, int* abgr, int color )
 		{
 			// top line
 			dstPtr = &abgr[ ci->x + ci->y * _imageWidth ];
-			for( int x = 0; x < bitmap.width; x++ )
+			for( int x = 0; x < ci->width; x++ )
 			{
 				*dstPtr = 0xFF0000FF;
 				++dstPtr;
 			}
 			// bottom line
-			dstPtr = &abgr[ ci->x + ( ci->y + bitmap.rows) * _imageWidth ];
-			for( int x = 0; x < bitmap.width; x++ )
+			dstPtr = &abgr[ ci->x + ( ci->y + ci->height - 1 ) * _imageWidth ];
+			for( int x = 0; x < ci->width; x++ )
 			{
 				*dstPtr = 0xFF0000FF;
 				++dstPtr;
 			}
 			// left line
 			dstPtr = &abgr[ ci->x + ci->y * _imageWidth ];
-			for( int y = 0; y < bitmap.rows; y++ )
+			for( int y = 0; y < ci->height; y++ )
 			{
 				*dstPtr = 0xFF0000FF;
 				dstPtr += _imageWidth;
 			}
 			// right line
-			dstPtr = &abgr[ ci->x + bitmap.width + ci->y * _imageWidth ];
-			for( int y = 0; y < bitmap.rows; y++ )
+			dstPtr = &abgr[ ci->x + ci->width - 1 + ci->y * _imageWidth ];
+			for( int y = 0; y < ci->height; y++ )
 			{
 				*dstPtr = 0xFF0000FF;
 				dstPtr += _imageWidth;
