@@ -1,0 +1,337 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1302EDBB160702F80024EE82 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1302EDBA160702F80024EE82 /* Cocoa.framework */; };
+		1302EDC5160702F80024EE82 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1302EDC3160702F80024EE82 /* InfoPlist.strings */; };
+		1302EDC7160702F80024EE82 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1302EDC6160702F80024EE82 /* main.m */; };
+		1302EDCB160702F80024EE82 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 1302EDC9160702F80024EE82 /* Credits.rtf */; };
+		1302EDCE160702F80024EE82 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1302EDCD160702F80024EE82 /* AppDelegate.mm */; };
+		1302EDD1160702F80024EE82 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1302EDCF160702F80024EE82 /* MainMenu.xib */; };
+		1302EDFF160743160024EE82 /* libFreetype2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1302EDFE160743160024EE82 /* libFreetype2.a */; };
+		1302EEFC1607721C0024EE82 /* FontMaker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1302EEFA1607721C0024EE82 /* FontMaker.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		1302EDB6160702F80024EE82 /* RasterFontMaker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RasterFontMaker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1302EDBA160702F80024EE82 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		1302EDBD160702F80024EE82 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		1302EDBE160702F80024EE82 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		1302EDBF160702F80024EE82 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		1302EDC2160702F80024EE82 /* RasterFontMaker-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "RasterFontMaker-Info.plist"; sourceTree = "<group>"; };
+		1302EDC4160702F80024EE82 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		1302EDC6160702F80024EE82 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		1302EDC8160702F80024EE82 /* RasterFontMaker-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RasterFontMaker-Prefix.pch"; sourceTree = "<group>"; };
+		1302EDCA160702F80024EE82 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
+		1302EDCC160702F80024EE82 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		1302EDCD160702F80024EE82 /* AppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
+		1302EDD0160702F80024EE82 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		1302EDFE160743160024EE82 /* libFreetype2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libFreetype2.a; path = freetype/lib/libFreetype2.a; sourceTree = "<group>"; };
+		1302EEFA1607721C0024EE82 /* FontMaker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FontMaker.cpp; sourceTree = "<group>"; };
+		1302EEFB1607721C0024EE82 /* FontMaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FontMaker.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1302EDB3160702F80024EE82 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1302EDBB160702F80024EE82 /* Cocoa.framework in Frameworks */,
+				1302EDFF160743160024EE82 /* libFreetype2.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1302EDAB160702F70024EE82 = {
+			isa = PBXGroup;
+			children = (
+				1302EDFE160743160024EE82 /* libFreetype2.a */,
+				1302EDC0160702F80024EE82 /* RasterFontMaker */,
+				1302EDB9160702F80024EE82 /* Frameworks */,
+				1302EDB7160702F80024EE82 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		1302EDB7160702F80024EE82 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1302EDB6160702F80024EE82 /* RasterFontMaker.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		1302EDB9160702F80024EE82 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1302EDBA160702F80024EE82 /* Cocoa.framework */,
+				1302EDBC160702F80024EE82 /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		1302EDBC160702F80024EE82 /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1302EDBD160702F80024EE82 /* AppKit.framework */,
+				1302EDBE160702F80024EE82 /* CoreData.framework */,
+				1302EDBF160702F80024EE82 /* Foundation.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		1302EDC0160702F80024EE82 /* RasterFontMaker */ = {
+			isa = PBXGroup;
+			children = (
+				1302EEF91607720F0024EE82 /* FontMaker */,
+				1302EDCC160702F80024EE82 /* AppDelegate.h */,
+				1302EDCD160702F80024EE82 /* AppDelegate.mm */,
+				1302EDCF160702F80024EE82 /* MainMenu.xib */,
+				1302EDC1160702F80024EE82 /* Supporting Files */,
+			);
+			path = RasterFontMaker;
+			sourceTree = "<group>";
+		};
+		1302EDC1160702F80024EE82 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				1302EDC2160702F80024EE82 /* RasterFontMaker-Info.plist */,
+				1302EDC3160702F80024EE82 /* InfoPlist.strings */,
+				1302EDC6160702F80024EE82 /* main.m */,
+				1302EDC8160702F80024EE82 /* RasterFontMaker-Prefix.pch */,
+				1302EDC9160702F80024EE82 /* Credits.rtf */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		1302EEF91607720F0024EE82 /* FontMaker */ = {
+			isa = PBXGroup;
+			children = (
+				1302EEFA1607721C0024EE82 /* FontMaker.cpp */,
+				1302EEFB1607721C0024EE82 /* FontMaker.h */,
+			);
+			path = FontMaker;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1302EDB5160702F80024EE82 /* RasterFontMaker */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1302EDD4160702F80024EE82 /* Build configuration list for PBXNativeTarget "RasterFontMaker" */;
+			buildPhases = (
+				1302EDB2160702F80024EE82 /* Sources */,
+				1302EDB3160702F80024EE82 /* Frameworks */,
+				1302EDB4160702F80024EE82 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RasterFontMaker;
+			productName = RasterFontMaker;
+			productReference = 1302EDB6160702F80024EE82 /* RasterFontMaker.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1302EDAD160702F70024EE82 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0440;
+				ORGANIZATIONNAME = "Alexey Schutsky";
+			};
+			buildConfigurationList = 1302EDB0160702F70024EE82 /* Build configuration list for PBXProject "RasterFontMaker" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 1302EDAB160702F70024EE82;
+			productRefGroup = 1302EDB7160702F80024EE82 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1302EDB5160702F80024EE82 /* RasterFontMaker */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1302EDB4160702F80024EE82 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1302EDC5160702F80024EE82 /* InfoPlist.strings in Resources */,
+				1302EDCB160702F80024EE82 /* Credits.rtf in Resources */,
+				1302EDD1160702F80024EE82 /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1302EDB2160702F80024EE82 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1302EDC7160702F80024EE82 /* main.m in Sources */,
+				1302EDCE160702F80024EE82 /* AppDelegate.mm in Sources */,
+				1302EEFC1607721C0024EE82 /* FontMaker.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		1302EDC3160702F80024EE82 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1302EDC4160702F80024EE82 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		1302EDC9160702F80024EE82 /* Credits.rtf */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1302EDCA160702F80024EE82 /* en */,
+			);
+			name = Credits.rtf;
+			sourceTree = "<group>";
+		};
+		1302EDCF160702F80024EE82 /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1302EDD0160702F80024EE82 /* en */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		1302EDD2160702F80024EE82 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/freetype/include\"",
+					/Volumes/Macintosh_HD/Users/Schutsky/Documents/ProjectsMy/RasterFontMaker/freetype/include,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		1302EDD3160702F80024EE82 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/freetype/include\"",
+					/Volumes/Macintosh_HD/Users/Schutsky/Documents/ProjectsMy/RasterFontMaker/freetype/include,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		1302EDD5160702F80024EE82 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "RasterFontMaker/RasterFontMaker-Prefix.pch";
+				INFOPLIST_FILE = "RasterFontMaker/RasterFontMaker-Info.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/RasterFontMaker/freetype/lib\"",
+					"\"$(SRCROOT)/freetype/lib\"",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		1302EDD6160702F80024EE82 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "RasterFontMaker/RasterFontMaker-Prefix.pch";
+				INFOPLIST_FILE = "RasterFontMaker/RasterFontMaker-Info.plist";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/RasterFontMaker/freetype/lib\"",
+					"\"$(SRCROOT)/freetype/lib\"",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1302EDB0160702F70024EE82 /* Build configuration list for PBXProject "RasterFontMaker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1302EDD2160702F80024EE82 /* Debug */,
+				1302EDD3160702F80024EE82 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1302EDD4160702F80024EE82 /* Build configuration list for PBXNativeTarget "RasterFontMaker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1302EDD5160702F80024EE82 /* Debug */,
+				1302EDD6160702F80024EE82 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 1302EDAD160702F70024EE82 /* Project object */;
+}
