@@ -34,6 +34,8 @@ bool _useCustom = false;
 {
 	FontMaker* maker = FontMaker::instance();
 
+	[self applySettings];
+	
 	int width = maker->imageWidth();
 	int height = maker->imageHeight();
 	
@@ -64,7 +66,7 @@ bool _useCustom = false;
 	// draw to image
 	
 	
-	maker->setFontSize( 64 );
+//	maker->setFontSize( 64 );
 		
 	/*int pages = */
 	maker->makeLayout();
@@ -87,12 +89,16 @@ bool _useCustom = false;
 - (IBAction)exportFont:(id)sender
 {
 	FontMaker* maker = FontMaker::instance();
+
+	[self applySettings];
+	[self saveSettings];
+
 	int width = maker->imageWidth();
 	int height = maker->imageHeight();
 	
-	maker->setFontSize( 16 );
-	
-	maker->setImageSize( width, height );
+//	maker->setFontSize( 16 );
+//	
+//	maker->setImageSize( width, height );
 	
 	if( _useCustom )
 	{
@@ -288,6 +294,11 @@ bool _useCustom = false;
 {
 //
 	CFPreferencesSetAppValue( CFSTR("FontPath"), _fontPath,  kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("FontSize"), [_fontSize stringValue], kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("Padding"), [_padding stringValue], kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("Frames"), ( ( [_drawFrame state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("CustomCharset"), [_customSet string], kCFPreferencesCurrentApplication );
+	
 	CFPreferencesAppSynchronize(  kCFPreferencesCurrentApplication );
 }
 
@@ -299,7 +310,51 @@ bool _useCustom = false;
 	{
 		FontMaker::instance()->loadFont( [_fontPath cStringUsingEncoding:NSASCIIStringEncoding] );
 	}
+
+	NSString* value;
+	
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("FontSize"), kCFPreferencesCurrentApplication );
+	if( value )
+		[_fontSize setStringValue:value];
+	else
+		[_fontSize setIntegerValue:16];
+
+	
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("Padding"), kCFPreferencesCurrentApplication );
+	if( value )
+		[_padding setStringValue:value];
+	else
+		[_padding setIntegerValue:0];
+
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("CustomCharset"), kCFPreferencesCurrentApplication );
+	[_customSet setString:value];
+	
+	
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("Padding"), kCFPreferencesCurrentApplication );
+	if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
+		[_drawFrame setState:NSOnState];
+	else
+		[_drawFrame setState:NSOffState];
+	
 }
 
+
+- (void)applySettings
+{
+	FontMaker* maker = FontMaker::instance();
+	
+	if( _fontPath )
+	{
+		maker->loadFont( [_fontPath cStringUsingEncoding:NSASCIIStringEncoding] );
+	}
+	
+	maker->setDrawFrames( [_drawFrame state] == NSOnState );
+		
+	NSInteger pad = [_padding integerValue];
+	maker->setPadding( (int)pad );
+	
+	NSInteger fSize = [_fontSize integerValue];
+	maker->setFontSize( (int)fSize );
+}
 
 @end

@@ -94,12 +94,15 @@ public:
 
 	void exportXML( const char* fileName );
 	void exportTXT( const char* fileName );
-	
+
+	void setDrawFrames( bool state );
+	void setPadding( int value ) { _padding = value; }
 private:
 	FT_Library	_library;
 	FT_Face		_face;
 	
 	int			_fontSize;
+	int			_padding;
 	int			_pageCount;
 	int			_lineHeight;
 	int			_imageWidth;

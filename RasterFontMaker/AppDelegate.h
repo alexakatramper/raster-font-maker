@@ -14,9 +14,11 @@
 }
 
 @property (assign) IBOutlet NSWindow* window;
-@property (assign) IBOutlet NSTextView* sample;
 @property (assign) IBOutlet NSImageView* imageView;
 @property (assign) IBOutlet NSTextView* customSet;
+@property (assign) IBOutlet NSButton* drawFrame;
+@property (assign) IBOutlet NSTextField* padding;
+@property (assign) IBOutlet NSTextField* fontSize;
 
 
 - (IBAction)updateImage:(id)sender;
@@ -29,5 +31,6 @@
 
 - (void)saveSettings;
 - (void)loadSettings;
+- (void)applySettings;
 
 @end
