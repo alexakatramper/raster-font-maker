@@ -440,3 +440,14 @@ void FontMaker::setDrawFrames( bool state )
 	else
 		_flags &= ~DRAW_BBOX;
 }
+
+
+//---------------------------------------------------------------------------------
+//	setDrawFrames()
+//---------------------------------------------------------------------------------
+const char* FontMaker::fontName()
+{
+	if( _face )
+		return _face->family_name;
+	return 0;
+}

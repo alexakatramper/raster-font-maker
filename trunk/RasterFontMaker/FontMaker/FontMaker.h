@@ -97,6 +97,9 @@ public:
 
 	void setDrawFrames( bool state );
 	void setPadding( int value ) { _padding = value; }
+	
+	const char* fontName();
+	
 private:
 	FT_Library	_library;
 	FT_Face		_face;

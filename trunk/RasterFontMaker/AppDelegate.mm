@@ -278,6 +278,8 @@ bool _useCustom = false;
 			
 			FontMaker::instance()->loadFont( [_fontPath cStringUsingEncoding:NSASCIIStringEncoding] );
 			
+			[_fontName setStringValue:[NSString stringWithCString:FontMaker::instance()->fontName() encoding:NSASCIIStringEncoding]];
+			
 			[self saveSettings];
 		}
 	}];
@@ -309,6 +311,7 @@ bool _useCustom = false;
 	if( _fontPath )
 	{
 		FontMaker::instance()->loadFont( [_fontPath cStringUsingEncoding:NSASCIIStringEncoding] );
+		[_fontName setStringValue:[NSString stringWithCString:FontMaker::instance()->fontName() encoding:NSASCIIStringEncoding]];
 	}
 
 	NSString* value;
@@ -346,6 +349,7 @@ bool _useCustom = false;
 	if( _fontPath )
 	{
 		maker->loadFont( [_fontPath cStringUsingEncoding:NSASCIIStringEncoding] );
+		[_fontName setStringValue:[NSString stringWithCString:FontMaker::instance()->fontName() encoding:NSASCIIStringEncoding]];
 	}
 	
 	maker->setDrawFrames( [_drawFrame state] == NSOnState );

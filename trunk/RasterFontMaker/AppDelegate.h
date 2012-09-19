@@ -19,6 +19,7 @@
 @property (assign) IBOutlet NSButton* drawFrame;
 @property (assign) IBOutlet NSTextField* padding;
 @property (assign) IBOutlet NSTextField* fontSize;
+@property (assign) IBOutlet NSTextField* fontName;
 
 
 - (IBAction)updateImage:(id)sender;
