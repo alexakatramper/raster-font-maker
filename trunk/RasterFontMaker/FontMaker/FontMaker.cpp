@@ -210,10 +210,12 @@ int FontMaker::makeLayout()
 	}
 	
 	// 2. set positions - arrange by rows & colums
+	// TODO: apply padding
 	_pageCount = 0;
 	int x = 0;
 	int y = 0;
 	int maxHeight = 0;
+	
 	_lineHeight = 0;
 //	size_t lineStart = 0;
 //	size_t i = 0;
@@ -223,9 +225,8 @@ int FontMaker::makeLayout()
 	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
 	{
 		ci = &(*it).second;
-		ci->page = _pageCount;
 		
-		if( ( x + ci->width ) > _imageWidth )
+		if( ( x + ci->width + _padding * 2 ) > _imageWidth )
 		{
 			// TODO: put chars of current line into vector
 			// when the line is done - check if glyphs are not exeeded the page's height
@@ -235,7 +236,7 @@ int FontMaker::makeLayout()
 //			for( size_t j = lineStart; j < i; j++ )
 			for( size_t m = 0; m < charLine.size(); m++ )
 			{
-				if( ( charLine[m]->y + charLine[m]->height ) >= _imageHeight )
+				if( ( charLine[m]->y + charLine[m]->height + _padding * 2 ) >= _imageHeight )
 				{
 					++_pageCount;
 					y = 0;
@@ -243,7 +244,7 @@ int FontMaker::makeLayout()
 					for( size_t k = 0; k < charLine.size(); k++ )
 					{
 						charLine[k]->page = _pageCount;
-						charLine[k]->y = 0;
+						charLine[k]->y = _padding;
 					}
 					break;
 				}
@@ -256,14 +257,16 @@ int FontMaker::makeLayout()
 			charLine.clear();
 		}
 		
-		ci->x = x;
-		ci->y = y;
+		ci->page = _pageCount;
+		ci->x = x + _padding;
+		ci->y = y + _padding;
 		
-		x += ci->width;
-		if( maxHeight < ci->height )
-			maxHeight = ci->height;
-		if( _lineHeight < ci->height )
-			_lineHeight = ci->height;
+		x += ci->width + _padding * 2;
+		
+		if( maxHeight < ci->height + _padding * 2 )
+			maxHeight = ci->height + _padding * 2;
+		if( _lineHeight < ci->height + _padding * 2 )
+			_lineHeight = ci->height + _padding * 2;
 		
 		charLine.push_back( ci );
 	}
@@ -274,12 +277,11 @@ int FontMaker::makeLayout()
 		if( ( charLine[j]->y + charLine[j]->height ) >= _imageHeight )
 		{
 			++_pageCount;
-			y = 0;
 			// move this line to new page
 			for( size_t k = 0; k < charLine.size(); k++ )
 			{
 				charLine[k]->page = _pageCount;
-				charLine[k]->y = 0;
+				charLine[k]->y = _padding;
 			}
 			break;
 		}
@@ -412,7 +414,7 @@ void FontMaker::exportTXT( const char* fileName )
 	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
 	{
 		ci = &(*it).second;
-		fprintf( f, "char id=%u x=%i y=%i width=%i height=%i xoffset=%i yoffset=%i xadvance=%i page=%i chnl=15\n",
+		fprintf( f, "char id=%-5u x=%-4i y=%-4i width=%-4i height=%-4i xoffset=%-4i yoffset=%-4i xadvance=%-4i page=%-4i chnl=15\n",
 				ci->charcode, ci->x, ci->y, ci->width, ci->height, ci->xoffset, ci->yoffset, ci->xadvance, ci->page );
 	}
 	
@@ -420,3 +422,13 @@ void FontMaker::exportTXT( const char* fileName )
 }
 
 
+//---------------------------------------------------------------------------------
+//	setDrawFrames()
+//---------------------------------------------------------------------------------
+void FontMaker::setDrawFrames( bool state )
+{
+	if( state )
+		_flags |= DRAW_BBOX;
+	else
+		_flags &= ~DRAW_BBOX;
+}
