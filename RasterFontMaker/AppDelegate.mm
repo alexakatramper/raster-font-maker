@@ -113,7 +113,7 @@ bool _useCustom = false;
 
 	int pages = maker->makeLayout();
 	
-	NSString* imageFileName = [NSString stringWithCString:"/Users/Schutsky/Desktop/testfont" encoding:NSASCIIStringEncoding ];
+	NSString* imageFileName = [NSString stringWithCString:"/Users/Schutsky/Desktop/testfont2" encoding:NSASCIIStringEncoding ];
 	
 	for( int i = 0; i < pages; i++ )
 	{
@@ -146,7 +146,7 @@ bool _useCustom = false;
 		CFRelease(destination);
 	}
 //	maker->exportTXT( "/Users/Schutsky/Desktop/testfont" );
-	maker->exportXML( "/Users/Schutsky/Desktop/testfont" );
+	maker->exportXML( "/Users/Schutsky/Desktop/testfont2" );
 }
 
 

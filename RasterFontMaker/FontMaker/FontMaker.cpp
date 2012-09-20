@@ -205,8 +205,12 @@ int FontMaker::makeLayout()
 		ci->width = _face->glyph->metrics.width / 64 + _padding * 2; //bbox.xMax - bbox.xMin;
 		ci->height = _face->glyph->metrics.height / 64 + _padding * 2; //bbox.yMax - bbox.yMin;
 		
-		ci->xoffset = 0; //bbox.xMin;
-		ci->yoffset = ( _face->glyph->metrics.height - _face->glyph->metrics.horiBearingY ) / 64; //bbox.yMin;
+		ci->xoffset = 0;
+//		ci->yoffset = ( _face->glyph->metrics.height - _face->glyph->metrics.horiBearingY ) / 64;
+//		ci->yoffset = ( _face->glyph->metrics.horiBearingY - _face->glyph->metrics.height ) / 64;
+//		ci->yoffset = _face->glyph->metrics.horiBearingY / 64;
+
+		ci->yoffset = ( _face->ascender - _face->glyph->metrics.horiBearingY - _face->descender ) / 64;
 
 		ci->xadvance = _face->glyph->metrics.horiAdvance / 64;
 	}
@@ -434,8 +438,10 @@ void FontMaker::exportXML( const char* fileName )
 
 	//		<common lineHeight="72" base="57" scaleW="1024" scaleH="2048" pages="1" packed="0" alphaChnl="1" redChnl="0" greenChnl="0" blueChnl="0"/>
 	XMLNode xCommon = xFont.addChild( "common" );
-	_addIntAttribute( xCommon, "lineHeight", _lineHeight );
-	xCommon.addAttribute( "base", "0" );
+//	_addIntAttribute( xCommon, "lineHeight", _lineHeight );
+//	_addIntAttribute( xCommon, "lineHeight", _face->ascender + _face->descender );
+	_addIntAttribute( xCommon, "lineHeight", _face->size->metrics.height / 64 );
+	_addIntAttribute( xCommon, "base", _face->size->metrics.ascender / 64 );
 	_addIntAttribute( xCommon, "scaleW", _imageWidth );
 	_addIntAttribute( xCommon, "scaleH", _imageHeight );
 	_addIntAttribute( xCommon, "pages", _pageCount );
@@ -473,7 +479,7 @@ void FontMaker::exportXML( const char* fileName )
 		XMLNode xChar = xChars.addChild( "char" );
 		_addIntAttribute( xChar, "id", ci->charcode );
 		_addIntAttribute( xChar, "x", ci->x );
-		_addIntAttribute( xChar, "y", ci->x );
+		_addIntAttribute( xChar, "y", ci->y );
 		_addIntAttribute( xChar, "width", ci->width );
 		_addIntAttribute( xChar, "height", ci->height );
 		_addIntAttribute( xChar, "xoffset", ci->xoffset );
