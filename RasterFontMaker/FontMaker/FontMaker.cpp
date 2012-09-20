@@ -7,6 +7,8 @@
 //
 
 #include "FontMaker.h"
+#include "xmlparser.h"
+
 #include <assert.h>
 
 #include <string>
@@ -386,11 +388,102 @@ void FontMaker::drawPage( int page, int* abgr, int color )
 }
 
 
+//------------------------------------------------------------------------------
+//	_addIntAttribute
+//------------------------------------------------------------------------------
+void _addIntAttribute( XMLNode& parent, const char* key, int value )
+{
+	char tmpStr[32] = { 0 };
+	
+	sprintf( tmpStr, "%i", value );
+	parent.addAttribute( key, tmpStr );
+}
+
+
 //---------------------------------------------------------------------------------
 //	exportXML()
 //---------------------------------------------------------------------------------
 void FontMaker::exportXML( const char* fileName )
 {
+	string fntName( fileName );
+	fntName += ".fnt";
+
+	XMLNode::setGlobalOptions( 1, 1, 1 );
+
+//	XMLNode xRoot = XMLNode::createXMLTopNode( "xml" );
+//	XMLNode xFont = xRoot.addChild( "font" );
+
+	XMLNode xFont = XMLNode::createXMLTopNode( "font" );
+
+//	<info face="Comic Sans MS" size="72" bold="0" italic="0" charset="" unicode="1" stretchH="100" smooth="1" aa="1" padding="10,10,10,10" spacing="10,10" outline="0"/>
+	XMLNode xInfo = xFont.addChild( "info" );
+
+	xInfo.addAttribute( "face", _face->family_name );
+	_addIntAttribute( xInfo, "size", _fontSize );
+	xInfo.addAttribute( "bold", "0" );
+	xInfo.addAttribute( "italic", "0" );
+	xInfo.addAttribute( "charset", "" );
+	xInfo.addAttribute( "unicode", "1" );
+	xInfo.addAttribute( "stretchH", "100" );
+	xInfo.addAttribute( "smooth", "1" );
+	xInfo.addAttribute( "aa", "1" );
+	xInfo.addAttribute( "padding", "10,10,10,10" );
+	xInfo.addAttribute( "spacing", "10,10" );
+	xInfo.addAttribute( "outline", "0" );
+	
+
+	//		<common lineHeight="72" base="57" scaleW="1024" scaleH="2048" pages="1" packed="0" alphaChnl="1" redChnl="0" greenChnl="0" blueChnl="0"/>
+	XMLNode xCommon = xFont.addChild( "common" );
+	_addIntAttribute( xCommon, "lineHeight", _lineHeight );
+	xCommon.addAttribute( "base", "0" );
+	_addIntAttribute( xCommon, "scaleW", _imageWidth );
+	_addIntAttribute( xCommon, "scaleH", _imageHeight );
+	_addIntAttribute( xCommon, "pages", _pageCount );
+	xCommon.addAttribute( "packed", "0" );
+	xCommon.addAttribute( "alphaChnl", "1" );
+	xCommon.addAttribute( "redChnl", "0" );
+	xCommon.addAttribute( "greenChnl", "0" );
+	xCommon.addAttribute( "blueChnl", "0" );
+
+	
+	//		<page id="0" file="Main_hd.png" />
+	XMLNode xPages = xFont.addChild( "pages" );
+	for( int p = 0; p < _pageCount; p++ )
+	{
+		XMLNode xPage = xPages.addChild( "page" );
+		_addIntAttribute( xPage, "id", p );
+		
+		char ext[32] = {0};
+		sprintf( ext, "_%i.png", p );
+		string pageName( fileName );
+		pageName.append( ext );
+		
+		xPage.addAttribute( "file", pageName.c_str() );
+	}
+	
+//	<chars count="432">
+	XMLNode xChars = xFont.addChild( "chars" );
+	_addIntAttribute( xChars, "count", (int)_charSet.size() );
+
+//		<char id="32" x="993" y="966" width="21" height="21" xoffset="-10" yoffset="47" xadvance="15" page="0" chnl="15" />
+	CharInfo* ci = 0;
+	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
+	{
+		ci = &(*it).second;
+		XMLNode xChar = xChars.addChild( "char" );
+		_addIntAttribute( xChar, "id", ci->charcode );
+		_addIntAttribute( xChar, "x", ci->x );
+		_addIntAttribute( xChar, "y", ci->x );
+		_addIntAttribute( xChar, "width", ci->width );
+		_addIntAttribute( xChar, "height", ci->height );
+		_addIntAttribute( xChar, "xoffset", ci->xoffset );
+		_addIntAttribute( xChar, "yoffset", ci->yoffset );
+		_addIntAttribute( xChar, "xadvance", ci->xadvance );
+		_addIntAttribute( xChar, "page", ci->page );
+		xChar.addAttribute( "chnl", "15" );
+	}
+
+	xFont.writeToFile( fntName.c_str() );
 }
 
 

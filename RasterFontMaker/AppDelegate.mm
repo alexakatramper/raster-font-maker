@@ -9,6 +9,8 @@
 #import "AppDelegate.h"
 #include "FontMaker.h"
 
+#define FONT_COLOR 0x00FFFFFF
+
 @implementation AppDelegate
 
 
@@ -73,7 +75,7 @@ bool _useCustom = false;
 
 	unsigned char* data = [bmp bitmapData];
 	int* rgbaData = (int*)data;
-	maker->drawPage( 0, rgbaData );
+	maker->drawPage( 0, rgbaData, FONT_COLOR );
 
 	// update image view
 	NSSize size;
@@ -129,7 +131,7 @@ bool _useCustom = false;
 	
 		unsigned char* data = [bmp bitmapData];
 		int* rgbaData = (int*)data;
-		maker->drawPage( i, rgbaData );
+		maker->drawPage( i, rgbaData, FONT_COLOR );
 		
 		// TODO: save image
 		CFURLRef url = (CFURLRef)[NSURL fileURLWithPath:[imageFileName stringByAppendingFormat:@"_%i.png",i ]];
@@ -143,7 +145,8 @@ bool _useCustom = false;
 		
 		CFRelease(destination);
 	}
-	maker->exportTXT( "/Users/Schutsky/Desktop/testfont" );
+//	maker->exportTXT( "/Users/Schutsky/Desktop/testfont" );
+	maker->exportXML( "/Users/Schutsky/Desktop/testfont" );
 }
 
 
