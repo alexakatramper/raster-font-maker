@@ -15,6 +15,7 @@
 		1302EDD1160702F80024EE82 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1302EDCF160702F80024EE82 /* MainMenu.xib */; };
 		1302EDFF160743160024EE82 /* libFreetype2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1302EDFE160743160024EE82 /* libFreetype2.a */; };
 		1302EEFC1607721C0024EE82 /* FontMaker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1302EEFA1607721C0024EE82 /* FontMaker.cpp */; };
+		1320D637160C95FC0032B21E /* icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1320D636160C95FC0032B21E /* icon.icns */; };
 		13FA8A97160B6E6E0004F720 /* xmlParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 13FA8A95160B6E6E0004F720 /* xmlParser.cpp */; };
 /* End PBXBuildFile section */
 
@@ -35,6 +36,7 @@
 		1302EDFE160743160024EE82 /* libFreetype2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libFreetype2.a; path = freetype/lib/libFreetype2.a; sourceTree = "<group>"; };
 		1302EEFA1607721C0024EE82 /* FontMaker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FontMaker.cpp; sourceTree = "<group>"; };
 		1302EEFB1607721C0024EE82 /* FontMaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FontMaker.h; sourceTree = "<group>"; };
+		1320D636160C95FC0032B21E /* icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = icon.icns; sourceTree = "<group>"; };
 		13FA8A95160B6E6E0004F720 /* xmlParser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xmlParser.cpp; sourceTree = "<group>"; };
 		13FA8A96160B6E6E0004F720 /* xmlparser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xmlparser.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -55,6 +57,7 @@
 		1302EDAB160702F70024EE82 = {
 			isa = PBXGroup;
 			children = (
+				1320D636160C95FC0032B21E /* icon.icns */,
 				1302EDFE160743160024EE82 /* libFreetype2.a */,
 				1302EDC0160702F80024EE82 /* RasterFontMaker */,
 				1302EDB9160702F80024EE82 /* Frameworks */,
@@ -178,6 +181,7 @@
 				1302EDC5160702F80024EE82 /* InfoPlist.strings in Resources */,
 				1302EDCB160702F80024EE82 /* Credits.rtf in Resources */,
 				1302EDD1160702F80024EE82 /* MainMenu.xib in Resources */,
+				1320D637160C95FC0032B21E /* icon.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

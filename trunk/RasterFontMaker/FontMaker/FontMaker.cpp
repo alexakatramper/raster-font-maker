@@ -211,6 +211,8 @@ int FontMaker::makeLayout()
 //		ci->yoffset = _face->glyph->metrics.horiBearingY / 64;
 
 		ci->yoffset = ( _face->ascender - _face->glyph->metrics.horiBearingY - _face->descender ) / 64;
+		
+		
 
 		ci->xadvance = _face->glyph->metrics.horiAdvance / 64;
 	}
@@ -407,10 +409,14 @@ void _addIntAttribute( XMLNode& parent, const char* key, int value )
 //---------------------------------------------------------------------------------
 //	exportXML()
 //---------------------------------------------------------------------------------
-void FontMaker::exportXML( const char* fileName )
+void FontMaker::exportXML( const char* fileName, const char* path )
 {
-	string fntName( fileName );
-	fntName += ".fnt";
+	string fullName( path );
+	fullName += "/";
+	fullName += fileName;
+	fullName += ".fnt";
+
+	char tmpStr[256] = {0};
 
 	XMLNode::setGlobalOptions( 1, 1, 1 );
 
@@ -431,8 +437,9 @@ void FontMaker::exportXML( const char* fileName )
 	xInfo.addAttribute( "stretchH", "100" );
 	xInfo.addAttribute( "smooth", "1" );
 	xInfo.addAttribute( "aa", "1" );
-	xInfo.addAttribute( "padding", "10,10,10,10" );
-	xInfo.addAttribute( "spacing", "10,10" );
+	sprintf( tmpStr, "%i,%i,%i,%i", _padding, _padding, _padding, _padding );
+	xInfo.addAttribute( "padding", tmpStr );
+	xInfo.addAttribute( "spacing", "0,0" );
 	xInfo.addAttribute( "outline", "0" );
 	
 
@@ -459,10 +466,15 @@ void FontMaker::exportXML( const char* fileName )
 		XMLNode xPage = xPages.addChild( "page" );
 		_addIntAttribute( xPage, "id", p );
 		
-		char ext[32] = {0};
-		sprintf( ext, "_%i.png", p );
 		string pageName( fileName );
-		pageName.append( ext );
+		if( _pageCount == 1 )
+			pageName.append( ".png" );
+		else
+		{
+			char ext[32] = {0};
+			sprintf( ext, "_%i.png", p );
+			pageName.append( ext );
+		}
 		
 		xPage.addAttribute( "file", pageName.c_str() );
 	}
@@ -489,29 +501,38 @@ void FontMaker::exportXML( const char* fileName )
 		xChar.addAttribute( "chnl", "15" );
 	}
 
-	xFont.writeToFile( fntName.c_str() );
+	xFont.writeToFile( fullName.c_str() );
 }
 
 
 //---------------------------------------------------------------------------------
 //	exportTXT()
 //---------------------------------------------------------------------------------
-void FontMaker::exportTXT( const char* fileName )
+void FontMaker::exportTXT( const char* fileName, const char* path )
 {
-	string fntName( fileName );
-	fntName += ".fnt";
+	string fullName( path );
+	fullName += "/";
+	fullName += fileName;
+	fullName += ".fnt";
 	
-	FILE* f = fopen( fntName.c_str(), "w" );
+	FILE* f = fopen( fullName.c_str(), "w" );
 
-	fprintf( f, "info face=\"TestFont\" size=%i bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=3 padding=1,1,1,1 spacing=1,1 outline=2\n",
-			_fontSize );
+	fprintf( f, "info face=\"TestFont\" size=%i bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=3 padding=%i,%i,%i,%i spacing=0,0 outline=0\n",
+			_fontSize, _padding, _padding, _padding, _padding );
 	
-	fprintf( f, "common lineHeight=%i base=15 scaleW=%i scaleH=%i pages=4 packed=0 alphaChnl=1 redChnl=0 greenChnl=0 blueChnl=0\n",
-			_lineHeight, _imageWidth, _imageHeight );
+	fprintf( f, "common lineHeight=%i base=15 scaleW=%i scaleH=%i pages=%i packed=0 alphaChnl=1 redChnl=0 greenChnl=0 blueChnl=0\n",
+			_lineHeight, _imageWidth, _imageHeight, _pageCount );
 	
-	for( int p = 0; p < _pageCount; p++ )
+	if( _pageCount == 1 )
 	{
-		fprintf( f, "page id=%i file=\"%s_%i.png\"\n", p, fileName, p );
+		fprintf( f, "page id=0 file=\"%s.png\"\n", fileName );
+	}
+	else
+	{
+		for( int p = 0; p < _pageCount; p++ )
+		{
+			fprintf( f, "page id=%i file=\"%s_%i.png\"\n", p, fileName, p );
+		}
 	}
 
 	fprintf( f, "chars count=%li\n", _charSet.size() );
