@@ -11,6 +11,7 @@
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 {
 	NSString* _fontPath;
+	NSString* _savePath;
 }
 
 @property (assign) IBOutlet NSWindow* window;
@@ -29,9 +30,11 @@
 - (IBAction)setTextureHeight:(id)sender;
 - (IBAction)chooseLoadFont:(id)sender;
 - (IBAction)customSetChanged:(id)sender;
+- (IBAction)fetchCharSet:(id)sender;
 
 - (void)saveSettings;
 - (void)loadSettings;
 - (void)applySettings;
+- (void)exportFontWithName:(NSString*)fileName andPath:(NSString*)path;
 
 @end

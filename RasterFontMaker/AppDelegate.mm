@@ -8,6 +8,7 @@
 
 #import "AppDelegate.h"
 #include "FontMaker.h"
+#include <set>
 
 #define FONT_COLOR 0x00FFFFFF
 
@@ -90,6 +91,35 @@ bool _useCustom = false;
 
 - (IBAction)exportFont:(id)sender
 {
+	NSSavePanel* panel = [NSSavePanel savePanel];
+	if( _savePath )
+		[panel setDirectoryURL:[NSURL fileURLWithPath:_savePath isDirectory:YES]];
+	
+	
+	
+	[panel setNameFieldStringValue:[NSString stringWithFormat:@"%s_%li.fnt", FontMaker::instance()->fontName(), [_fontSize integerValue] ]];
+													//FontMaker::instance()->fontSize() ]];
+//	[panel setExtensionHidden:NO];
+	[panel setCanSelectHiddenExtension:YES];
+//	[panel setCanChooseDirectories:NO];
+//	[panel setCanChooseFiles:YES];
+//	[panel setAllowsMultipleSelection:NO];
+	[panel setAllowedFileTypes:[NSArray arrayWithObject:@"fnt"]];
+	
+	[panel beginSheetModalForWindow:_window completionHandler:^(NSInteger result)
+	 {
+		 if( result == NSFileHandlingPanelOKButton )
+		 {
+			 NSString* fileName = [[panel.URL URLByDeletingPathExtension] lastPathComponent];
+			 
+			 [self exportFontWithName:fileName andPath:[panel.directoryURL path]];
+			 [self saveSettings];
+		 }
+	 }];
+}
+
+- (void)exportFontWithName:(NSString*)fileName andPath:(NSString*)path
+{
 	FontMaker* maker = FontMaker::instance();
 
 	[self applySettings];
@@ -97,10 +127,6 @@ bool _useCustom = false;
 
 	int width = maker->imageWidth();
 	int height = maker->imageHeight();
-	
-//	maker->setFontSize( 16 );
-//	
-//	maker->setImageSize( width, height );
 	
 	if( _useCustom )
 	{
@@ -113,7 +139,7 @@ bool _useCustom = false;
 
 	int pages = maker->makeLayout();
 	
-	NSString* imageFileName = [NSString stringWithCString:"/Users/Schutsky/Desktop/testfont2" encoding:NSASCIIStringEncoding ];
+//	NSString* imageFileName = [NSString stringWithCString:"/Users/Schutsky/Desktop/testfont2" encoding:NSASCIIStringEncoding ];
 	
 	for( int i = 0; i < pages; i++ )
 	{
@@ -133,20 +159,25 @@ bool _useCustom = false;
 		int* rgbaData = (int*)data;
 		maker->drawPage( i, rgbaData, FONT_COLOR );
 		
-		// TODO: save image
-		CFURLRef url = (CFURLRef)[NSURL fileURLWithPath:[imageFileName stringByAppendingFormat:@"_%i.png",i ]];
+		CFURLRef url = 0;
+
+		if( pages == 1 )
+			url = (CFURLRef)[NSURL fileURLWithPath:[path stringByAppendingFormat:@"/%@.png", fileName ]];
+		else
+			url = (CFURLRef)[NSURL fileURLWithPath:[path stringByAppendingFormat:@"/%@_%i.png", fileName, i ]];
+			
 		CGImageDestinationRef destination = CGImageDestinationCreateWithURL( url, kUTTypePNG, 1, NULL );
 		CGImageDestinationAddImage( destination, [bmp CGImage], nil );
 		
 		if( !CGImageDestinationFinalize( destination ) )
 		{
-			NSLog( @"Failed to write image to %@", imageFileName );
+			NSLog( @"Failed to write image to %@", url );
 		}
 		
-		CFRelease(destination);
+		CFRelease( destination );
 	}
 //	maker->exportTXT( "/Users/Schutsky/Desktop/testfont" );
-	maker->exportXML( "/Users/Schutsky/Desktop/testfont2" );
+	maker->exportXML( [fileName cStringUsingEncoding:NSASCIIStringEncoding], [path cStringUsingEncoding:NSASCIIStringEncoding] );
 }
 
 
@@ -299,6 +330,7 @@ bool _useCustom = false;
 {
 //
 	CFPreferencesSetAppValue( CFSTR("FontPath"), _fontPath,  kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("SavePath"), _savePath,  kCFPreferencesCurrentApplication );
 	CFPreferencesSetAppValue( CFSTR("FontSize"), [_fontSize stringValue], kCFPreferencesCurrentApplication );
 	CFPreferencesSetAppValue( CFSTR("Padding"), [_padding stringValue], kCFPreferencesCurrentApplication );
 	CFPreferencesSetAppValue( CFSTR("Frames"), ( ( [_drawFrame state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
@@ -310,6 +342,7 @@ bool _useCustom = false;
 
 - (void)loadSettings
 {
+	_savePath = (NSString*)CFPreferencesCopyAppValue( CFSTR("SavePath"), kCFPreferencesCurrentApplication );
 	_fontPath = (NSString*)CFPreferencesCopyAppValue( CFSTR("FontPath"), kCFPreferencesCurrentApplication );
 	if( _fontPath )
 	{
@@ -363,5 +396,46 @@ bool _useCustom = false;
 	NSInteger fSize = [_fontSize integerValue];
 	maker->setFontSize( (int)fSize );
 }
+
+
+
+- (IBAction)fetchCharSet:(id)sender
+{
+	NSOpenPanel* panel = [NSOpenPanel openPanel];
+	[panel setCanChooseDirectories:NO];
+	[panel setCanChooseFiles:YES];
+	[panel setAllowsMultipleSelection:NO];
+//	[panel setAllowedFileTypes:[NSArray arrayWithObject:@"ttf"]];
+	[panel beginSheetModalForWindow:_window completionHandler:^(NSInteger result)
+	 {
+		 if( result == NSFileHandlingPanelOKButton )
+		 {
+			 NSError* error = 0;
+			 NSString* fileContent = [NSString stringWithContentsOfFile:[panel.URL path] encoding:NSUTF8StringEncoding error:&error];
+			 if( error == nil )
+			 {
+				 std::set<unichar> charset;
+				 for( NSUInteger i = 0; i < [fileContent length]; i++ )
+				 {
+					 unichar uch = [fileContent characterAtIndex:i];
+					 if( uch < 0x0020 )	// skip control symbols
+						 continue;
+					 charset.insert( uch );
+				 }
+				 NSMutableString* setStr = [NSMutableString stringWithCapacity:charset.size()];
+				 
+				 for( std::set<unichar>::iterator it = charset.begin(); it != charset.end(); it++ )
+					 [setStr appendFormat:@"%C", (*it) ];
+				 
+				 [_customSet setString:setStr];
+
+				 [self saveSettings];
+			 }
+			 
+			 
+		 }
+	 }];
+}
+
 
 @end

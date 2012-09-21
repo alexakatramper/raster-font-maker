@@ -72,6 +72,7 @@ public:
 	void cleanup();
 	void loadFont( const char* fileName );
 	void setFontSize( int size );
+	int fontSize() { return _fontSize; }
 	
 	void setImageSize( int width, int height );
 	void setImageWidth( int width ) { _imageWidth = width; }
@@ -92,8 +93,8 @@ public:
 	
 	void drawPage( int page, int* abgr, int color = 0xFF000000 );
 
-	void exportXML( const char* fileName );
-	void exportTXT( const char* fileName );
+	void exportXML( const char* fileName, const char* path );
+	void exportTXT( const char* fileName, const char* path );
 
 	void setDrawFrames( bool state );
 	void setPadding( int value ) { _padding = value; }
