@@ -50,6 +50,33 @@ struct CharInfo
 typedef map<FT_UInt,CharInfo> CharSet;
 typedef CharSet::iterator	CharSetIt;
 
+class FontMaker;
+
+struct Pixel
+{
+//	unsigned char a;
+//	unsigned char b;
+//	unsigned char g;
+//	unsigned char r;
+	unsigned char r;
+	unsigned char g;
+	unsigned char b;
+	unsigned char a;
+
+	Pixel() : a(0), b(0), g(0), r(0) {}
+	Pixel( int c ) { a = c >> 24; b = ( ( c >> 16 ) & 0xFF ); g = ( ( c >> 8 ) & 0xFF ); r = ( c & 0xFF ); }
+
+};
+
+
+struct SpanFuncParams
+{
+	FontMaker*	maker;
+	Pixel*		buf;	// abgr
+	int			yOffset;
+	Pixel		color;
+	bool		outline;
+};
 
 
 class FontMaker
@@ -93,15 +120,24 @@ public:
 	
 	int makeLayout();
 	
-	void drawPage( int page, int* abgr, int color = 0xFF000000 );
+	void drawPage( int page, int* abgr );
 
 	void exportXML( const char* fileName, const char* path );
 	void exportTXT( const char* fileName, const char* path );
 
 	void setDrawFrames( bool state );
+	void setDrawOutline( bool state );
+
 	void setPadding( int value ) { _padding = value; }
 	
 	const char* fontName();
+	
+	static void spanFunc( int y, int count, const FT_Span* spans, void* user );
+	
+	void setFontColor( unsigned char r, unsigned char g, unsigned char b, unsigned char a );
+	void setOutlineColor( unsigned char r, unsigned char g, unsigned char b, unsigned char a );
+	
+	void setOutlineWidth( float w ) { _outlineWidth = w; }
 	
 private:
 	FT_Library	_library;
@@ -114,6 +150,9 @@ private:
 	int			_imageWidth;
 	int			_imageHeight;
 	CharSet		_charSet;
+	float		_outlineWidth;
+	Pixel		_fontColor;
+	Pixel		_outlineColor;
 //	vector<int*>		_pages;
 	
 	int			_flags;
