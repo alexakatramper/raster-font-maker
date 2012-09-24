@@ -42,6 +42,8 @@ struct CharInfo
 //		if( glyph )
 //			FT_Done_Glyph( glyph ); // TODO: fix crash here!
 	}
+	
+	static bool compareByHeight( const CharInfo& i, const CharInfo& j ) { return ( i.height < j.height ); }
 };
 
 

@@ -186,10 +186,12 @@ void FontMaker::removeCharRange( FT_UInt ch1, FT_UInt ch2 )
 //---------------------------------------------------------------------------------
 int FontMaker::makeLayout()
 {
-	// 1.load glyphs & info
-//	FT_BBox bbox;
 	CharInfo* ci = 0;
 	
+	_lineHeight = 0;
+	int maxYOffset = 0;
+	
+	// 1. load glyphs and get metrics
 	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
 	{
 		ci = &(*it).second;
@@ -200,31 +202,34 @@ int FontMaker::makeLayout()
 
 		FT_Load_Glyph( _face, glyph_index, FT_LOAD_DEFAULT );
 		FT_Get_Glyph( _face->glyph, &ci->glyph );
-//		FT_Glyph_Get_CBox( ci->glyph, FT_GLYPH_BBOX_TRUNCATE, &bbox );
 		
 		ci->width = _face->glyph->metrics.width / 64 + _padding * 2; //bbox.xMax - bbox.xMin;
 		ci->height = _face->glyph->metrics.height / 64 + _padding * 2; //bbox.yMax - bbox.yMin;
 		
 		ci->xoffset = 0;
-//		ci->yoffset = ( _face->glyph->metrics.height - _face->glyph->metrics.horiBearingY ) / 64;
-//		ci->yoffset = ( _face->glyph->metrics.horiBearingY - _face->glyph->metrics.height ) / 64;
-//		ci->yoffset = _face->glyph->metrics.horiBearingY / 64;
 
-		ci->yoffset = ( _face->ascender - _face->glyph->metrics.horiBearingY - _face->descender ) / 64;
-		
-		
-
+		ci->yoffset = _face->glyph->metrics.horiBearingY / 64;
 		ci->xadvance = _face->glyph->metrics.horiAdvance / 64;
+
+
+		if( maxYOffset < ci->yoffset )
+			maxYOffset = ci->yoffset;
+		
+		if( _lineHeight < ci->height )
+			_lineHeight = ci->height;
 	}
 	
-	// 2. set positions - arrange by rows & colums
+	// 2.sort by height (try to optimize layout - ?)
+	// TODO: sort by height (try to optimize layout)
+//	sort( _charSet.begin(), _charSet.end(), CharInfo::compareByHeight );
+	
+	// 3. set positions - arrange by rows & colums
 	// TODO: apply padding
 	_pageCount = 0;
 	int x = 0;
 	int y = 0;
 	int maxHeight = 0;
 	
-	_lineHeight = 0;
 	
 	vector<CharInfo*> charLine;
 	
@@ -261,6 +266,9 @@ int FontMaker::makeLayout()
 			charLine.clear();
 		}
 		
+//		ci->yoffset = _lineHeight - ci->yoffset;
+		ci->yoffset = maxYOffset - ci->yoffset;
+
 		ci->page = _pageCount;
 		ci->x = x;
 		ci->y = y;
@@ -269,8 +277,6 @@ int FontMaker::makeLayout()
 		
 		if( maxHeight < ci->height )
 			maxHeight = ci->height;
-		if( _lineHeight < ci->height )
-			_lineHeight = ci->height;
 		
 		charLine.push_back( ci );
 	}
