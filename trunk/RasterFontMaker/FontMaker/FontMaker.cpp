@@ -7,6 +7,9 @@
 //
 
 #include "FontMaker.h"
+
+#include FT_STROKER_H
+
 #include "xmlparser.h"
 
 #include <assert.h>
@@ -20,12 +23,14 @@ using std::vector;
 FontMaker* FontMaker::_instance = 0;
 
 
-#define DRAW_BBOX	1
+#define DRAW_BODY		0x01
+#define DRAW_OUTLINE	0x02
+#define DRAW_BBOX		0x04
 
 //---------------------------------------------------------------------------------
 //	FontMaker()
 //---------------------------------------------------------------------------------
-FontMaker::FontMaker() : _library(0), _face(0), _flags(DRAW_BBOX), _fontSize(0), _pageCount(0), _lineHeight(0)
+FontMaker::FontMaker() : _library(0), _face(0), _flags(DRAW_BODY|DRAW_OUTLINE), _fontSize(0), _pageCount(0), _lineHeight(0), _outlineWidth(0)
 {
 	_imageHeight = 512;
 	_imageWidth = 512;
@@ -266,7 +271,6 @@ int FontMaker::makeLayout()
 			charLine.clear();
 		}
 		
-//		ci->yoffset = _lineHeight - ci->yoffset;
 		ci->yoffset = maxYOffset - ci->yoffset;
 
 		ci->page = _pageCount;
@@ -307,7 +311,7 @@ int FontMaker::makeLayout()
 //---------------------------------------------------------------------------------
 //	drawPage()
 //---------------------------------------------------------------------------------
-void FontMaker::drawPage( int page, int* abgr, int color )
+void FontMaker::drawPage( int page, int* abgr )
 {
 	// clear image
 	memset( abgr, 0, _imageHeight * _imageWidth * sizeof( int ) );
@@ -328,39 +332,110 @@ void FontMaker::drawPage( int page, int* abgr, int color )
 		
 		if( ci->page != page )
 			continue;
+
+		FT_Glyph glyph;
+		int* dstPtr = 0;
 		
 
-		if( ci->glyph->format != FT_GLYPH_FORMAT_BITMAP )
+		if( _flags & DRAW_OUTLINE )
 		{
-			FT_Glyph_To_Bitmap( &ci->glyph, FT_RENDER_MODE_NORMAL, 0, 1 );
-		}
-		
-		FT_BitmapGlyph glyph_bitmap = (FT_BitmapGlyph)ci->glyph;
-		
-		// TODO: take xOffset/yOffset from glyph_bitmap
-		
-		int* dstPtr = &abgr[ ci->x + _padding + ( ci->y + _padding ) * _imageWidth ];
-		
-				
-		// copy raster data
-		FT_Bitmap bitmap = glyph_bitmap->bitmap;
-		
-		for( int y = 0; y < bitmap.rows; y++ )
-		{
-			int n = ci->x + _padding + ( ci->y + _padding + y ) * _imageWidth;
+			// TODO: draw outline
+			// copy glyph so we can use original one again after rendering
+			FT_Glyph_Copy( ci->glyph, &glyph );
 			
-			dstPtr = &abgr[ n ];
-			for( int x = 0; x < bitmap.width; x++ )
+			if( glyph->format == FT_GLYPH_FORMAT_OUTLINE )
 			{
-				if( bitmap.buffer [ x + y * bitmap.width ] != 0 )
-				{
-					*dstPtr = bitmap.buffer [ x + y * bitmap.width ] << 24;
-					
-					*dstPtr |= ( 0x00FFFFFF & color );
-				}
-				++dstPtr;
+				// Set up a stroker.
+				FT_Stroker stroker;
+				FT_Stroker_New( _library, &stroker );
+				FT_Stroker_Set( stroker,
+							   (int)( _outlineWidth * 64 ),
+							   FT_STROKER_LINECAP_ROUND,
+							   FT_STROKER_LINEJOIN_ROUND,
+							   0 );
+				
+				FT_Glyph_StrokeBorder( &glyph, stroker, 0, 1 );
+
+				// Render the outline spans to the span list
+				SpanFuncParams user = { 0 };
+				user.maker = this;
+				user.buf = (Pixel*)&abgr[ ci->x + _padding + ( ci->y + _padding ) * _imageWidth ];
+				user.yOffset = _imageWidth;
+				user.color = _outlineColor;
+				user.outline = true;
+
+				FT_Outline *outline = &reinterpret_cast<FT_OutlineGlyph>(glyph)->outline;
+				FT_Raster_Params params;
+				memset( &params, 0, sizeof( params ) );
+				params.flags = FT_RASTER_FLAG_AA | FT_RASTER_FLAG_DIRECT;
+				params.gray_spans = spanFunc;
+				params.user = &user;
+				
+				FT_Outline_Render( _library, outline, &params );
+				
+				FT_Stroker_Done( stroker );
 			}
+
+			
+			FT_Done_Glyph( glyph );
 		}
+
+		if( _flags & DRAW_BODY )
+		{
+			// copy glyph so we can use original one again after rendering
+			FT_Glyph_Copy( ci->glyph, &glyph );
+			
+			// Render basic glyph
+			SpanFuncParams user = { 0 };
+			user.maker = this;
+			user.buf = (Pixel*)&abgr[ ci->x + _padding + ( ci->y + _padding ) * _imageWidth ];
+			user.yOffset = _imageWidth;
+			user.color = _fontColor;
+			user.outline = false;
+			
+			FT_Outline *outline = &reinterpret_cast<FT_OutlineGlyph>(glyph)->outline;
+			FT_Raster_Params params;
+			memset( &params, 0, sizeof( params ) );
+			params.flags = FT_RASTER_FLAG_AA | FT_RASTER_FLAG_DIRECT;
+			params.gray_spans = spanFunc;
+			params.user = &user;
+			
+			FT_Outline_Render( _library, outline, &params );
+
+			
+//			if( glyph->format != FT_GLYPH_FORMAT_BITMAP )
+//			{
+//				FT_Glyph_To_Bitmap( &glyph, FT_RENDER_MODE_NORMAL, 0, 1 );
+//			}
+//			
+//			FT_BitmapGlyph glyph_bitmap = (FT_BitmapGlyph)glyph;
+//			
+//			dstPtr = &abgr[ ci->x + _padding + ( ci->y + _padding ) * _imageWidth ];
+//			
+//			
+//			// copy raster data
+//			FT_Bitmap bitmap = glyph_bitmap->bitmap;
+//			
+//			for( int y = 0; y < bitmap.rows; y++ )
+//			{
+//				int n = ci->x + _padding + ( ci->y + _padding + y ) * _imageWidth;
+//				
+//				dstPtr = &abgr[ n ];
+//				for( int x = 0; x < bitmap.width; x++ )
+//				{
+//					if( bitmap.buffer [ x + y * bitmap.width ] != 0 )
+//					{
+//						*dstPtr = bitmap.buffer [ x + y * bitmap.width ] << 24;
+//						
+//						*dstPtr |= ( 0x00FFFFFF & color );
+//					}
+//					++dstPtr;
+//				}
+//			}
+			
+			FT_Done_Glyph( glyph );
+		}
+
 		
 		if( _flags & DRAW_BBOX )
 		{
@@ -397,6 +472,48 @@ void FontMaker::drawPage( int page, int* abgr, int color )
 
 	}
 
+}
+
+
+//------------------------------------------------------------------------------
+//	spanFunc
+//------------------------------------------------------------------------------
+void FontMaker::spanFunc( int y, int count, const FT_Span* spans, void* user )
+{
+	SpanFuncParams* params = (SpanFuncParams*)user;
+	Pixel* ptr = params->buf + y * params->yOffset;
+	
+	if( y < params->maker->_padding * -1 )
+	{
+		printf( "WARNING: padding too small for outline (%i)\n", y * -1 );
+		return;
+	}
+	
+	for( int i = 0; i < count; i++ )
+	{
+		ptr = params->buf + y * params->yOffset + spans[i].x;
+		for( int x = 0; x < spans[i].len; x++ )
+		{
+			if( params->outline )
+			{
+				ptr->r = params->color.r;
+				ptr->g = params->color.g;
+				ptr->b = params->color.b;
+				ptr->a = spans[i].coverage;// << 24;
+			}
+			else
+			{
+				float fg = spans[i].coverage / 255.0f;
+				float bg = 1 - fg;
+				ptr->r = ptr->r * bg + params->color.r * fg;
+				ptr->g = ptr->g * bg + params->color.g * fg;
+				ptr->b = ptr->b * bg + params->color.b * fg;
+			}
+			
+//			*ptr |= params->color; //( 0x00FF0000 & color );
+			++ptr;
+		}
+	}
 }
 
 
@@ -569,11 +686,47 @@ void FontMaker::setDrawFrames( bool state )
 
 
 //---------------------------------------------------------------------------------
-//	setDrawFrames()
+//	setDrawOutline()
+//---------------------------------------------------------------------------------
+void FontMaker::setDrawOutline( bool state )
+{
+	if( state )
+		_flags |= DRAW_OUTLINE;
+	else
+		_flags &= ~DRAW_OUTLINE;
+}
+
+
+//---------------------------------------------------------------------------------
+//	fontName()
 //---------------------------------------------------------------------------------
 const char* FontMaker::fontName()
 {
 	if( _face )
 		return _face->family_name;
 	return 0;
+}
+
+
+//---------------------------------------------------------------------------------
+//	setFontColor()
+//---------------------------------------------------------------------------------
+void FontMaker::setFontColor( unsigned char r, unsigned char g, unsigned char b, unsigned char a )
+{
+	_fontColor.r = r;
+	_fontColor.g = g;
+	_fontColor.b = b;
+	_fontColor.a = a;
+}
+
+
+//---------------------------------------------------------------------------------
+//	setOutlineColor()
+//---------------------------------------------------------------------------------
+void FontMaker::setOutlineColor( unsigned char r, unsigned char g, unsigned char b, unsigned char a )
+{
+	_outlineColor.r = r;
+	_outlineColor.g = g;
+	_outlineColor.b = b;
+	_outlineColor.a = a;
 }

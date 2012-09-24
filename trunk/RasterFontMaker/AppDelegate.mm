@@ -10,7 +10,6 @@
 #include "FontMaker.h"
 #include <set>
 
-#define FONT_COLOR 0x00FFFFFF
 
 @implementation AppDelegate
 
@@ -76,7 +75,7 @@ bool _useCustom = false;
 
 	unsigned char* data = [bmp bitmapData];
 	int* rgbaData = (int*)data;
-	maker->drawPage( 0, rgbaData, FONT_COLOR );
+	maker->drawPage( 0, rgbaData );
 
 	// update image view
 	NSSize size;
@@ -112,7 +111,10 @@ bool _useCustom = false;
 		 {
 			 NSString* fileName = [[panel.URL URLByDeletingPathExtension] lastPathComponent];
 			 
-			 [self exportFontWithName:fileName andPath:[panel.directoryURL path]];
+			 if( _savePath )
+				 [_savePath release];
+			 _savePath = [[panel.directoryURL path] retain];
+			 [self exportFontWithName:fileName andPath:_savePath];
 			 [self saveSettings];
 		 }
 	 }];
@@ -157,7 +159,7 @@ bool _useCustom = false;
 	
 		unsigned char* data = [bmp bitmapData];
 		int* rgbaData = (int*)data;
-		maker->drawPage( i, rgbaData, FONT_COLOR );
+		maker->drawPage( i, rgbaData );
 		
 		CFURLRef url = 0;
 
@@ -303,6 +305,10 @@ bool _useCustom = false;
 	[panel setCanChooseFiles:YES];
 	[panel setAllowsMultipleSelection:NO];
 	[panel setAllowedFileTypes:[NSArray arrayWithObject:@"ttf"]];
+	if( _fontPath )
+		[panel setDirectoryURL:[NSURL fileURLWithPath:_fontPath isDirectory:NO]];
+
+	
 	[panel beginSheetModalForWindow:_window completionHandler:^(NSInteger result)
 	{
 		if( result == NSFileHandlingPanelOKButton )
@@ -329,12 +335,23 @@ bool _useCustom = false;
 - (void)saveSettings
 {
 //
-	CFPreferencesSetAppValue( CFSTR("FontPath"), _fontPath,  kCFPreferencesCurrentApplication );
 	CFPreferencesSetAppValue( CFSTR("SavePath"), _savePath,  kCFPreferencesCurrentApplication );
-	CFPreferencesSetAppValue( CFSTR("FontSize"), [_fontSize stringValue], kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("FontPath"), _fontPath,  kCFPreferencesCurrentApplication );
 	CFPreferencesSetAppValue( CFSTR("Padding"), [_padding stringValue], kCFPreferencesCurrentApplication );
 	CFPreferencesSetAppValue( CFSTR("Frames"), ( ( [_drawFrame state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
 	CFPreferencesSetAppValue( CFSTR("CustomCharset"), [_customSet string], kCFPreferencesCurrentApplication );
+
+	CFPreferencesSetAppValue( CFSTR("FontSize"), [_fontSize stringValue], kCFPreferencesCurrentApplication );
+//	CFPreferencesSetAppValue( CFSTR("FontColor"), [_mainColor color], kCFPreferencesCurrentApplication );
+
+	CFPreferencesSetAppValue( CFSTR("DrawOutline"), ( ( [_drawOutline state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("OutlineWidth"), [_outlineWidth stringValue], kCFPreferencesCurrentApplication );
+//	CFPreferencesSetAppValue( CFSTR("OutlineColor"), [_outlineColor color], kCFPreferencesCurrentApplication );
+	
+//	CFPreferencesSetAppValue( CFSTR("Charset0000"), ( ( [_drawOutline state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
+	
+	CFPreferencesSetAppValue( CFSTR("CharsetXXXX"), ( ( [_charsetCustom state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
+	
 	
 	CFPreferencesAppSynchronize(  kCFPreferencesCurrentApplication );
 }
@@ -351,6 +368,26 @@ bool _useCustom = false;
 	}
 
 	NSString* value;
+	NSColor* color;
+	
+	
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("Padding"), kCFPreferencesCurrentApplication );
+	if( value )
+		[_padding setStringValue:value];
+	else
+		[_padding setIntegerValue:0];
+
+	
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("Frames"), kCFPreferencesCurrentApplication );
+	if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
+		[_drawFrame setState:NSOnState];
+	else
+		[_drawFrame setState:NSOffState];
+
+	
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("CustomCharset"), kCFPreferencesCurrentApplication );
+	[_customSet setString:value];
+	
 	
 	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("FontSize"), kCFPreferencesCurrentApplication );
 	if( value )
@@ -359,21 +396,32 @@ bool _useCustom = false;
 		[_fontSize setIntegerValue:16];
 
 	
-	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("Padding"), kCFPreferencesCurrentApplication );
+	color = (NSColor*)CFPreferencesCopyAppValue( CFSTR("FontColor"), kCFPreferencesCurrentApplication );
 	if( value )
-		[_padding setStringValue:value];
-	else
-		[_padding setIntegerValue:0];
-
-	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("CustomCharset"), kCFPreferencesCurrentApplication );
-	[_customSet setString:value];
+		[_mainColor setColor:color];
 	
 	
-	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("Padding"), kCFPreferencesCurrentApplication );
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("DrawOutline"), kCFPreferencesCurrentApplication );
 	if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
-		[_drawFrame setState:NSOnState];
+		[_drawOutline setState:NSOnState];
 	else
-		[_drawFrame setState:NSOffState];
+		[_drawOutline setState:NSOffState];
+	
+
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("OutlineWidth"), kCFPreferencesCurrentApplication );
+	[_outlineWidth setStringValue:value];
+
+
+	color = (NSColor*)CFPreferencesCopyAppValue( CFSTR("OutlineColor"), kCFPreferencesCurrentApplication );
+	if( value )
+		[_outlineColor setColor:color];
+
+
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("CharsetXXXX"), kCFPreferencesCurrentApplication );
+	if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
+		[_charsetCustom setState:NSOnState];
+	else
+		[_charsetCustom setState:NSOffState];
 	
 }
 
@@ -395,6 +443,27 @@ bool _useCustom = false;
 	
 	NSInteger fSize = [_fontSize integerValue];
 	maker->setFontSize( (int)fSize );
+
+
+	maker->setDrawOutline( [_drawOutline state] == NSOnState );
+	maker->setOutlineWidth( [_outlineWidth floatValue] );
+
+	
+	CGFloat r = 0;
+	CGFloat g = 0;
+	CGFloat b = 0;
+	CGFloat a = 0;
+	
+	NSColor* fontColor = [[_mainColor color] colorUsingColorSpace:[NSColorSpace genericRGBColorSpace]];
+//	NSColor* fontColor = [_mainColor color];
+	[fontColor getRed:&r green:&g blue:&b alpha:&a];
+	
+	maker->setFontColor( (unsigned char)( r * 255 ), (unsigned char)( g * 255 ), (unsigned char)( b * 255 ), (unsigned char)( a * 255 ) );
+
+	fontColor = [[_outlineColor color] colorUsingColorSpace:[NSColorSpace genericRGBColorSpace]];
+	[fontColor getRed:&r green:&g blue:&b alpha:&a];
+	
+	maker->setOutlineColor( (unsigned char)( r * 255 ), (unsigned char)( g * 255 ), (unsigned char)( b * 255 ), (unsigned char)( a * 255 ) );
 }
 
 
