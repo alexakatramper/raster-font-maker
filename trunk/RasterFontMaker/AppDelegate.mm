@@ -77,16 +77,16 @@ bool _useCustom = false;
 	
 
 	// draw to image
+//	maker->makeLayout();
 	
+	maker->strokeChars();
+	maker->layoutChars();
 	
-//	maker->setFontSize( 64 );
-		
-	/*int pages = */
-	maker->makeLayout();
 
 	unsigned char* data = [bmp bitmapData];
 	int* rgbaData = (int*)data;
-	maker->drawPage( 0, rgbaData );
+//	maker->drawPage( 0, rgbaData );
+	maker->drawChars( 0, (PixelData32*)rgbaData );
 
 	// update image view
 	NSSize size;

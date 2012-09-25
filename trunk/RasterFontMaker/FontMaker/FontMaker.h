@@ -13,21 +13,42 @@
 #include FT_GLYPH_H
 
 #include <map>
+#include <vector>
 
 using std::map;
+using std::vector;
+
+struct Span
+{
+	Span() { }
+	Span(int _x, int _y, int _width, int _coverage)
+	: x(_x), y(_y), width(_width), coverage(_coverage) { }
+	
+	int x, y, width, coverage;
+};
+
+typedef vector<Span> Spans;
+
+
 
 struct CharInfo
 {
-	FT_UInt	charcode;
-	int		x;
-	int		y;
-	int		width;
-	int		height;
-	int		xoffset;
-	int		yoffset;
-	int		xadvance;
-	int		page;
+	FT_UInt		charcode;
+	int			x;
+	int			y;
+	int			xMin;
+	int			xMax;
+	int			yMin;
+	int			yMax;
+	int			width;
+	int			height;
+	int			xoffset;
+	int			yoffset;
+	int			xadvance;
+	int			page;
 	FT_Glyph	glyph;
+	Spans		outlineSpans;
+	Spans		bodySpans;
 	
 	CharInfo(): charcode(0), x(0), y(0), xoffset(0), yoffset(0), xadvance(0), page(0), glyph(0) {}
 	
@@ -44,7 +65,45 @@ struct CharInfo
 	}
 	
 	static bool compareByHeight( const CharInfo& i, const CharInfo& j ) { return ( i.height < j.height ); }
+	
+	void updateSize()
+	{
+		width = 0;
+		height = 0;
+		xMin = 0;
+		xMax = 0;
+		yMin = 0;
+		yMax = 0;
+		
+		for( size_t i = 0; i < bodySpans.size(); i++ )
+		{
+			if( xMin > bodySpans[i].x )
+				xMin = bodySpans[i].x;
+			if( xMax < bodySpans[i].x + bodySpans[i].width )
+				xMax = bodySpans[i].x + bodySpans[i].width;
+			if( yMin > bodySpans[i].y )
+				yMin = bodySpans[i].y;
+			if( yMax < bodySpans[i].y )
+				yMax = bodySpans[i].y;
+		}
+		
+		for( size_t i = 0; i < outlineSpans.size(); i++ )
+		{
+			if( xMin > outlineSpans[i].x )
+				xMin = outlineSpans[i].x;
+			if( xMax < outlineSpans[i].x + outlineSpans[i].width )
+				xMax = outlineSpans[i].x + outlineSpans[i].width;
+			if( yMin > outlineSpans[i].y )
+				yMin = outlineSpans[i].y;
+			if( yMax < outlineSpans[i].y )
+				yMax = outlineSpans[i].y;
+		}
+
+		width = xMax - xMin;
+		height = yMax - yMin;
+	}
 };
+
 
 
 typedef map<FT_UInt,CharInfo> CharSet;
@@ -52,30 +111,26 @@ typedef CharSet::iterator	CharSetIt;
 
 class FontMaker;
 
-struct Pixel
+
+struct PixelData32
 {
-//	unsigned char a;
-//	unsigned char b;
-//	unsigned char g;
-//	unsigned char r;
+	PixelData32(): r(0), g(0), b(0), a(255) {}
+	PixelData32( unsigned char r_, unsigned char g_, unsigned char b_, unsigned char a_ = 255 ) : r(r_), g(g_), b(b_), a(a_) {}
+	PixelData32( int c ) { a = c >> 24; b = ( ( c >> 16 ) & 0xFF ); g = ( ( c >> 8 ) & 0xFF ); r = ( c & 0xFF ); }
 	unsigned char r;
 	unsigned char g;
 	unsigned char b;
 	unsigned char a;
-
-	Pixel() : a(0), b(0), g(0), r(0) {}
-	Pixel( int c ) { a = c >> 24; b = ( ( c >> 16 ) & 0xFF ); g = ( ( c >> 8 ) & 0xFF ); r = ( c & 0xFF ); }
-
 };
 
 
 struct SpanFuncParams
 {
-	FontMaker*	maker;
-	Pixel*		buf;	// abgr
-	int			yOffset;
-	Pixel		color;
-	bool		outline;
+	FontMaker*		maker;
+	PixelData32*	buf;
+	int				yOffset;
+	PixelData32		color;
+	bool			outline;
 };
 
 
@@ -133,6 +188,7 @@ public:
 	const char* fontName();
 	
 	static void spanFunc( int y, int count, const FT_Span* spans, void* user );
+	static void renderCallback( int y, int count, const FT_Span* spans, void* user );
 	
 	void setFontColor( unsigned char r, unsigned char g, unsigned char b, unsigned char a );
 	void setOutlineColor( unsigned char r, unsigned char g, unsigned char b, unsigned char a );
@@ -140,6 +196,11 @@ public:
 	void setOutlineWidth( float w ) { _outlineWidth = w; }
 	
 	bool fontLoaded() { return ( _face != 0 ); }
+	
+	// new stuff
+	void strokeChars();
+	int layoutChars();
+	void drawChars( int page, PixelData32* buf );
 	
 private:
 	FT_Library	_library;
@@ -153,9 +214,8 @@ private:
 	int			_imageHeight;
 	CharSet		_charSet;
 	float		_outlineWidth;
-	Pixel		_fontColor;
-	Pixel		_outlineColor;
-//	vector<int*>		_pages;
+	PixelData32	_fontColor;
+	PixelData32	_outlineColor;
 	
 	int			_flags;
 };
