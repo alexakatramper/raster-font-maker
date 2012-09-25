@@ -1407,6 +1407,7 @@
 							<string key="NSFrame">{{527, 42}, {330, 530}}</string>
 							<reference key="NSSuperview" ref="439893737"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView" ref="838418057"/>
 							<string key="NSReuseIdentifierKey">_NS:9</string>
 							<array class="NSMutableArray" key="NSTabViewItems">
 								<object class="NSTabViewItem" id="614512608">
@@ -1662,9 +1663,9 @@
 																<string key="NSReuseIdentifierKey">_NS:9</string>
 																<bool key="NSEnabled">YES</bool>
 																<object class="NSButtonCell" key="NSCell" id="871350989">
-																	<int key="NSCellFlags">-2080374784</int>
+																	<int key="NSCellFlags">67108864</int>
 																	<int key="NSCellFlags2">268435456</int>
-																	<string key="NSContents">Latin base (0020—007F)</string>
+																	<string key="NSContents">Latin base (0020—007E)</string>
 																	<reference key="NSSupport" ref="233439448"/>
 																	<string key="NSCellIdentifier">_NS:9</string>
 																	<reference key="NSControlView" ref="420201303"/>
@@ -1766,7 +1767,7 @@
 																<string key="NSFrameSize">{259, 14}</string>
 																<reference key="NSSuperview" ref="1039659795"/>
 																<reference key="NSWindow"/>
-																<reference key="NSNextKeyView" ref="680657616"/>
+																<reference key="NSNextKeyView" ref="998093189"/>
 																<string key="NSReuseIdentifierKey">_NS:13</string>
 																<object class="NSTextContainer" key="NSTextContainer" id="882049687">
 																	<object class="NSLayoutManager" key="NSLayoutManager">
@@ -2020,7 +2021,7 @@ wGw</bytes>
 												<string key="NSFrame">{{17, 17}, {276, 130}}</string>
 												<reference key="NSSuperview" ref="838418057"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="1039659795"/>
+												<reference key="NSNextKeyView" ref="680657616"/>
 												<string key="NSReuseIdentifierKey">_NS:9</string>
 												<int key="NSsFlags">133138</int>
 												<reference key="NSVScroller" ref="998093189"/>
@@ -2073,6 +2074,7 @@ wGw</bytes>
 												<string key="NSFrame">{{167, 144}, {132, 32}}</string>
 												<reference key="NSSuperview" ref="838418057"/>
 												<reference key="NSWindow"/>
+												<reference key="NSNextKeyView"/>
 												<string key="NSReuseIdentifierKey">_NS:9</string>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSButtonCell" key="NSCell" id="169382244">
@@ -2725,7 +2727,7 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="942802311"/>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1920, 1058}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1280, 1002}}</string>
 				<string key="NSMinSize">{870, 608}</string>
 				<string key="NSMaxSize">{870, 608}</string>
 				<bool key="NSWindowIsRestorable">YES</bool>
@@ -7861,6 +7863,47 @@ AAMAAAABAAEAAAFTAAMAAAAEAAAFwgAAAAAACAAIAAgACAABAAEAAQABA</bytes>
 					<object class="IBClassDescriptionSource" key="sourceIdentifier">
 						<string key="majorKey">IBProjectSource</string>
 						<string key="minorKey">./Classes/AppDelegate.h</string>
+					</object>
+				</object>
+				<object class="IBPartialClassDescription">
+					<string key="className">NSDocument</string>
+					<dictionary class="NSMutableDictionary" key="actions">
+						<string key="printDocument:">id</string>
+						<string key="revertDocumentToSaved:">id</string>
+						<string key="runPageLayout:">id</string>
+						<string key="saveDocument:">id</string>
+						<string key="saveDocumentAs:">id</string>
+						<string key="saveDocumentTo:">id</string>
+					</dictionary>
+					<dictionary class="NSMutableDictionary" key="actionInfosByName">
+						<object class="IBActionInfo" key="printDocument:">
+							<string key="name">printDocument:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="revertDocumentToSaved:">
+							<string key="name">revertDocumentToSaved:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="runPageLayout:">
+							<string key="name">runPageLayout:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="saveDocument:">
+							<string key="name">saveDocument:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="saveDocumentAs:">
+							<string key="name">saveDocumentAs:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBActionInfo" key="saveDocumentTo:">
+							<string key="name">saveDocumentTo:</string>
+							<string key="candidateClassName">id</string>
+						</object>
+					</dictionary>
+					<object class="IBClassDescriptionSource" key="sourceIdentifier">
+						<string key="majorKey">IBProjectSource</string>
+						<string key="minorKey">./Classes/NSDocument.h</string>
 					</object>
 				</object>
 				<object class="IBPartialClassDescription">

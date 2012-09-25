@@ -230,9 +230,9 @@ bool _useCustom = false;
 	if( [[sender identifier] compare:@"0x0020"] == NSOrderedSame )
 	{
 		if( [(NSButton*)sender state] == NSOnState )
-			FontMaker::instance()->addCharRange( 0x0020, 0x007F);
+			FontMaker::instance()->addCharRange( 0x0020, 0x007E);	//0x007F is 'del'
 		else
-			FontMaker::instance()->removeCharRange( 0x0020, 0x007F);
+			FontMaker::instance()->removeCharRange( 0x0020, 0x007E);
 		return;
 	}
 
