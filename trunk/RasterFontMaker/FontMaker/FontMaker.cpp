@@ -735,13 +735,16 @@ void FontMaker::setOutlineColor( unsigned char r, unsigned char g, unsigned char
 //---------------------------------------------------------------------------------
 //	strokeChars()
 //---------------------------------------------------------------------------------
-void FontMaker::strokeChars()
+bool FontMaker::strokeChars()
 {
+	bool result = true;
 	// stroke chars and get some metrics
 	
 	FT_Glyph glyph;
 	CharInfo* ci = 0;
 	_lineHeight = 0;
+	int maxYOffset = 0;
+
 	
 	// Set up a stroker.
 	FT_Stroker stroker;
@@ -763,7 +766,10 @@ void FontMaker::strokeChars()
 		FT_UInt glyph_index = FT_Get_Char_Index( _face, ci->charcode );
 		
 		if( glyph_index == 0 )
+		{
+			result = false;
 			printf( "WARNING: no glyph for charcode 0x%X\n", ci->charcode );
+		}
 		
 		FT_Load_Glyph( _face, glyph_index, FT_LOAD_DEFAULT );
 		FT_Get_Glyph( _face->glyph, &ci->glyph );
@@ -819,14 +825,24 @@ void FontMaker::strokeChars()
 			FT_Done_Glyph( glyph );
 		}
 		
-		ci->updateSize();
+		ci->updateSize( _padding );
 		
 		if( _lineHeight < ci->height )
 			_lineHeight = ci->height;
 
+		if( maxYOffset < ci->yoffset )
+			maxYOffset = ci->yoffset;
 	}
 	
+	// update yoffset for all
+	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
+	{
+		it->second.yoffset = maxYOffset - it->second.yoffset;
+	}
+
 	FT_Stroker_Done( stroker );
+	
+	return result;
 }
 
 
@@ -840,7 +856,6 @@ int FontMaker::layoutChars()
 	int x = 0;
 	int y = 0;
 	int maxHeight = 0;
-	int maxYOffset = 0;
 
 	vector<CharInfo*> charLine;
 	
@@ -877,7 +892,7 @@ int FontMaker::layoutChars()
 			charLine.clear();
 		}
 		
-		ci->yoffset = maxYOffset - ci->yoffset;
+//		ci->yoffset = maxYOffset - ci->yoffset;
 		
 		ci->page = _pageCount;
 		ci->x = x;
@@ -907,7 +922,6 @@ int FontMaker::layoutChars()
 		}
 	}
 	
-	
 	++_pageCount;
 	
 	return _pageCount;}
@@ -936,7 +950,7 @@ void FontMaker::drawChars( int page, PixelData32* buf )
 			// Loop over the outline spans and just draw them into the image.
 			for( Spans::iterator it = ci->outlineSpans.begin(); it != ci->outlineSpans.end(); ++it )
 			{
-				pixIndex = ci->x - ci->xMin + it->x + ( ci->y + ci->height + ci->yMin - it->y ) * _imageWidth;
+				pixIndex = ci->x - ci->xMin + it->x + _padding + ( ci->y + ci->height + ci->yMin - it->y - _padding ) * _imageWidth;
 				for( int w = 0; w < it->width; ++w )
 				{
 					buf[pixIndex].r = _outlineColor.r;
@@ -951,9 +965,7 @@ void FontMaker::drawChars( int page, PixelData32* buf )
 		// Then loop over the regular glyph spans and blend them into the image.
 		for( Spans::iterator it = ci->bodySpans.begin(); it != ci->bodySpans.end(); ++it )
 		{
-//			pixIndex = ci->x - ci->xMin + it->x + ( ci->y + ci->height - it->y ) * _imageWidth;
-//			pixIndex = ci->x + it->x + ( ci->y + ci->height - it->y ) * _imageWidth;
-			pixIndex = ci->x - ci->xMin + it->x + ( ci->y + ci->height + ci->yMin - it->y ) * _imageWidth;
+			pixIndex = ci->x - ci->xMin + it->x + _padding + ( ci->y + ci->height + ci->yMin - it->y - _padding ) * _imageWidth;
 			for( int w = 0; w < it->width; ++w )
 			{
 				if( _flags & DRAW_OUTLINE )
