@@ -139,6 +139,8 @@ public:
 	
 	void setOutlineWidth( float w ) { _outlineWidth = w; }
 	
+	bool fontLoaded() { return ( _face != 0 ); }
+	
 private:
 	FT_Library	_library;
 	FT_Face		_face;
