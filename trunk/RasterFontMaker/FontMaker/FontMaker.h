@@ -68,23 +68,37 @@ struct CharInfo
 	
 	void updateSize()
 	{
-		width = 0;
-		height = 0;
 		xMin = 0;
 		xMax = 0;
 		yMin = 0;
 		yMax = 0;
 		
-		for( size_t i = 0; i < bodySpans.size(); i++ )
+		if( bodySpans.size() > 0 )
 		{
-			if( xMin > bodySpans[i].x )
-				xMin = bodySpans[i].x;
-			if( xMax < bodySpans[i].x + bodySpans[i].width )
-				xMax = bodySpans[i].x + bodySpans[i].width;
-			if( yMin > bodySpans[i].y )
-				yMin = bodySpans[i].y;
-			if( yMax < bodySpans[i].y )
-				yMax = bodySpans[i].y;
+			xMin = bodySpans[0].x;
+			xMax = bodySpans[0].x + bodySpans[0].width;
+			yMin = bodySpans[0].y;
+			yMax = bodySpans[0].y;
+			
+			for( size_t i = 1; i < bodySpans.size(); i++ )
+			{
+				if( xMin > bodySpans[i].x )
+					xMin = bodySpans[i].x;
+				if( xMax < bodySpans[i].x + bodySpans[i].width )
+					xMax = bodySpans[i].x + bodySpans[i].width;
+				if( yMin > bodySpans[i].y )
+					yMin = bodySpans[i].y;
+				if( yMax < bodySpans[i].y )
+					yMax = bodySpans[i].y;
+			}
+		}
+		
+		if( ( bodySpans.size() == 0 ) && ( outlineSpans.size() > 0 ) )
+		{
+			xMin = outlineSpans[0].x;
+			xMax = outlineSpans[0].x + outlineSpans[0].width;
+			yMin = outlineSpans[0].y;
+			yMax = outlineSpans[0].y;
 		}
 		
 		for( size_t i = 0; i < outlineSpans.size(); i++ )
@@ -98,6 +112,10 @@ struct CharInfo
 			if( yMax < outlineSpans[i].y )
 				yMax = outlineSpans[i].y;
 		}
+
+//		xoffset += xMin;
+//		xadvance += ( xMax - xMin ) - width;
+//		yoffset += yMin;
 
 		width = xMax - xMin;
 		height = yMax - yMin;

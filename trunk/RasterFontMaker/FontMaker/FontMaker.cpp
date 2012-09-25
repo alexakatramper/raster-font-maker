@@ -768,9 +768,12 @@ void FontMaker::strokeChars()
 		FT_Load_Glyph( _face, glyph_index, FT_LOAD_DEFAULT );
 		FT_Get_Glyph( _face->glyph, &ci->glyph );
 		
-		ci->xoffset = 0;
-		
+		ci->width = _face->glyph->metrics.width / 64 + _padding * 2;
+		ci->height = _face->glyph->metrics.height / 64 + _padding * 2;
+
+		ci->xoffset = _face->glyph->metrics.horiBearingX / 64;
 		ci->yoffset = _face->glyph->metrics.horiBearingY / 64;
+		
 		ci->xadvance = _face->glyph->metrics.horiAdvance / 64;
 
 		
@@ -933,8 +936,7 @@ void FontMaker::drawChars( int page, PixelData32* buf )
 			// Loop over the outline spans and just draw them into the image.
 			for( Spans::iterator it = ci->outlineSpans.begin(); it != ci->outlineSpans.end(); ++it )
 			{
-//				pixIndex = ( _imageHeight - 1 - ( it->y - ci->yMin ) ) * _imageWidth + it->x - ci->xMin + ci->x;
-		 pixIndex = ci->x - ci->xMin + it->x + ( ci->y + ci->height - it->y ) * _imageWidth;
+				pixIndex = ci->x - ci->xMin + it->x + ( ci->y + ci->height + ci->yMin - it->y ) * _imageWidth;
 				for( int w = 0; w < it->width; ++w )
 				{
 					buf[pixIndex].r = _outlineColor.r;
@@ -949,8 +951,9 @@ void FontMaker::drawChars( int page, PixelData32* buf )
 		// Then loop over the regular glyph spans and blend them into the image.
 		for( Spans::iterator it = ci->bodySpans.begin(); it != ci->bodySpans.end(); ++it )
 		{
-//			pixIndex = ( _imageHeight - 1 - ( it->y - ci->yMin ) ) * _imageWidth + it->x - ci->xMin + penX;
-			pixIndex = ci->x - ci->xMin + it->x + ( ci->y + ci->height - it->y ) * _imageWidth;
+//			pixIndex = ci->x - ci->xMin + it->x + ( ci->y + ci->height - it->y ) * _imageWidth;
+//			pixIndex = ci->x + it->x + ( ci->y + ci->height - it->y ) * _imageWidth;
+			pixIndex = ci->x - ci->xMin + it->x + ( ci->y + ci->height + ci->yMin - it->y ) * _imageWidth;
 			for( int w = 0; w < it->width; ++w )
 			{
 				if( _flags & DRAW_OUTLINE )
@@ -970,6 +973,43 @@ void FontMaker::drawChars( int page, PixelData32* buf )
 				}
 				++pixIndex;
 			}
+		}
+
+		if( _flags & DRAW_BBOX )
+		{
+			// top line
+			pixIndex = ci->x + ci->y * _imageWidth;
+			for( int x = 0; x < ci->width; x++ )
+			{
+				buf[pixIndex].r = 0xFF;
+				buf[pixIndex].a = 0xFF;
+				++pixIndex;
+			}
+			// bottom line
+			pixIndex = ci->x + ( ci->y + ci->height ) * _imageWidth;
+			for( int x = 0; x < ci->width; x++ )
+			{
+				buf[pixIndex].r = 0xFF;
+				buf[pixIndex].a = 0xFF;
+				++pixIndex;
+			}
+			// left line
+			pixIndex = ci->x + ci->y * _imageWidth;
+			for( int y = 0; y < ci->height; y++ )
+			{
+				buf[pixIndex].r = 0xFF;
+				buf[pixIndex].a = 0xFF;
+				pixIndex += _imageWidth;
+			}
+			// right line
+			pixIndex = ci->x + ci->width + ci->y * _imageWidth;
+			for( int y = 0; y < ci->height; y++ )
+			{
+				buf[pixIndex].r = 0xFF;
+				buf[pixIndex].a = 0xFF;
+				pixIndex += _imageWidth;
+			}
+			
 		}
 	}
 }
