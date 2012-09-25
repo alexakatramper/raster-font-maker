@@ -35,6 +35,17 @@ bool _useCustom = false;
 - (IBAction)updateImage:(id)sender
 {
 	FontMaker* maker = FontMaker::instance();
+	
+	if( ! maker->fontLoaded() )
+	{
+		NSAlert* alert = [NSAlert alertWithMessageText:@"No font loaded."
+										 defaultButton:nil
+									   alternateButton:nil
+										   otherButton:nil
+							 informativeTextWithFormat:@"You have to load а font at first."];
+		[alert runModal];
+		return;
+	}
 
 	[self applySettings];
 	
@@ -90,6 +101,17 @@ bool _useCustom = false;
 
 - (IBAction)exportFont:(id)sender
 {
+	if( ! FontMaker::instance()->fontLoaded() )
+	{
+		NSAlert* alert = [NSAlert alertWithMessageText:@"No font loaded."
+										 defaultButton:nil
+									   alternateButton:nil
+										   otherButton:nil
+							 informativeTextWithFormat:@"You have to load а font at first."];
+		[alert runModal];
+		return;
+	}
+
 	NSSavePanel* panel = [NSSavePanel savePanel];
 	if( _savePath )
 		[panel setDirectoryURL:[NSURL fileURLWithPath:_savePath isDirectory:YES]];
