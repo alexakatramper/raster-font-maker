@@ -339,7 +339,6 @@ void FontMaker::drawPage( int page, int* abgr )
 
 		if( _flags & DRAW_OUTLINE )
 		{
-			// TODO: draw outline
 			// copy glyph so we can use original one again after rendering
 			FT_Glyph_Copy( ci->glyph, &glyph );
 			
@@ -359,7 +358,7 @@ void FontMaker::drawPage( int page, int* abgr )
 				// Render the outline spans to the span list
 				SpanFuncParams user = { 0 };
 				user.maker = this;
-				user.buf = (Pixel*)&abgr[ ci->x + _padding + ( ci->y + _padding ) * _imageWidth ];
+				user.buf = (PixelData32*)&abgr[ ci->x + _padding + ( ci->y + _padding ) * _imageWidth ];
 				user.yOffset = _imageWidth;
 				user.color = _outlineColor;
 				user.outline = true;
@@ -388,7 +387,7 @@ void FontMaker::drawPage( int page, int* abgr )
 			// Render basic glyph
 			SpanFuncParams user = { 0 };
 			user.maker = this;
-			user.buf = (Pixel*)&abgr[ ci->x + _padding + ( ci->y + _padding ) * _imageWidth ];
+			user.buf = (PixelData32*)&abgr[ ci->x + _padding + ( ci->y + _padding ) * _imageWidth ];
 			user.yOffset = _imageWidth;
 			user.color = _fontColor;
 			user.outline = false;
@@ -481,7 +480,7 @@ void FontMaker::drawPage( int page, int* abgr )
 void FontMaker::spanFunc( int y, int count, const FT_Span* spans, void* user )
 {
 	SpanFuncParams* params = (SpanFuncParams*)user;
-	Pixel* ptr = params->buf + y * params->yOffset;
+	PixelData32* ptr = params->buf + y * params->yOffset;
 	
 	if( y < params->maker->_padding * -1 )
 	{
@@ -730,3 +729,259 @@ void FontMaker::setOutlineColor( unsigned char r, unsigned char g, unsigned char
 	_outlineColor.b = b;
 	_outlineColor.a = a;
 }
+
+
+
+//---------------------------------------------------------------------------------
+//	strokeChars()
+//---------------------------------------------------------------------------------
+void FontMaker::strokeChars()
+{
+	// stroke chars and get some metrics
+	
+	FT_Glyph glyph;
+	CharInfo* ci = 0;
+	_lineHeight = 0;
+	
+	// Set up a stroker.
+	FT_Stroker stroker;
+	FT_Stroker_New( _library, &stroker );
+	FT_Stroker_Set( stroker,
+				   (int)( _outlineWidth * 64 ),
+				   FT_STROKER_LINECAP_ROUND,
+				   FT_STROKER_LINEJOIN_ROUND,
+				   0 );
+	
+	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
+	{
+		ci = &(*it).second;
+		
+		ci->bodySpans.clear();
+		ci->outlineSpans.clear();
+		
+		
+		FT_UInt glyph_index = FT_Get_Char_Index( _face, ci->charcode );
+		
+		if( glyph_index == 0 )
+			printf( "WARNING: no glyph for charcode 0x%X\n", ci->charcode );
+		
+		FT_Load_Glyph( _face, glyph_index, FT_LOAD_DEFAULT );
+		FT_Get_Glyph( _face->glyph, &ci->glyph );
+		
+		ci->xoffset = 0;
+		
+		ci->yoffset = _face->glyph->metrics.horiBearingY / 64;
+		ci->xadvance = _face->glyph->metrics.horiAdvance / 64;
+
+		
+		if( _flags & DRAW_OUTLINE )
+		{
+			FT_Glyph_Copy( ci->glyph, &glyph );
+			
+			if( glyph->format == FT_GLYPH_FORMAT_OUTLINE )
+			{
+				
+				FT_Glyph_StrokeBorder( &glyph, stroker, 0, 1 );
+				
+				// Render the outline spans to the span list
+				
+				FT_Outline *outline = &reinterpret_cast<FT_OutlineGlyph>(glyph)->outline;
+				FT_Raster_Params params;
+				memset( &params, 0, sizeof( params ) );
+				params.flags = FT_RASTER_FLAG_AA | FT_RASTER_FLAG_DIRECT;
+				params.gray_spans = renderCallback;
+				params.user = &ci->outlineSpans;
+				
+				FT_Outline_Render( _library, outline, &params );
+			}
+			
+			
+			FT_Done_Glyph( glyph );
+		}
+		
+		if( _flags & DRAW_BODY )
+		{
+			FT_Glyph_Copy( ci->glyph, &glyph );
+			
+			FT_Outline *outline = &reinterpret_cast<FT_OutlineGlyph>(glyph)->outline;
+			FT_Raster_Params params;
+			memset( &params, 0, sizeof( params ) );
+			params.flags = FT_RASTER_FLAG_AA | FT_RASTER_FLAG_DIRECT;
+			params.gray_spans = renderCallback;
+			params.user = &ci->bodySpans;
+			
+			FT_Outline_Render( _library, outline, &params );
+			
+			
+			FT_Done_Glyph( glyph );
+		}
+		
+		ci->updateSize();
+		
+		if( _lineHeight < ci->height )
+			_lineHeight = ci->height;
+
+	}
+	
+	FT_Stroker_Done( stroker );
+}
+
+
+//---------------------------------------------------------------------------------
+//	layoutChars()
+//---------------------------------------------------------------------------------
+int FontMaker::layoutChars()
+{
+	CharInfo* ci = 0;
+	_pageCount = 0;
+	int x = 0;
+	int y = 0;
+	int maxHeight = 0;
+	int maxYOffset = 0;
+
+	vector<CharInfo*> charLine;
+	
+	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
+	{
+		ci = &(*it).second;
+		
+		if( ( x + ci->width ) > _imageWidth )
+		{
+			// put chars of current line into vector
+			// when the line is done - check if glyphs are not exeeded the page's height
+			// and move this line to new page if needed
+			
+			for( size_t m = 0; m < charLine.size(); m++ )
+			{
+				if( ( charLine[m]->y + charLine[m]->height * 2 ) >= _imageHeight )
+				{
+					++_pageCount;
+					y = 0;
+					// move this line to new page
+					for( size_t k = 0; k < charLine.size(); k++ )
+					{
+						charLine[k]->page = _pageCount;
+						charLine[k]->y = 0;
+					}
+					break;
+				}
+			}
+			
+			// start new line
+			x = 0;
+			y += maxHeight;
+			maxHeight = 0;
+			charLine.clear();
+		}
+		
+		ci->yoffset = maxYOffset - ci->yoffset;
+		
+		ci->page = _pageCount;
+		ci->x = x;
+		ci->y = y;
+		
+		x += ci->width;
+		
+		if( maxHeight < ci->height )
+			maxHeight = ci->height;
+		
+		charLine.push_back( ci );
+	}
+	
+	// check the last line if it is not out of page bottom
+	for( size_t j = 0; j < charLine.size(); j++ )
+	{
+		if( ( charLine[j]->y + charLine[j]->height ) >= _imageHeight )
+		{
+			++_pageCount;
+			// move this line to new page
+			for( size_t k = 0; k < charLine.size(); k++ )
+			{
+				charLine[k]->page = _pageCount;
+				charLine[k]->y = 0;
+			}
+			break;
+		}
+	}
+	
+	
+	++_pageCount;
+	
+	return _pageCount;}
+
+
+//---------------------------------------------------------------------------------
+//	drawChars()
+//---------------------------------------------------------------------------------
+void FontMaker::drawChars( int page, PixelData32* buf )
+{
+	CharInfo* ci = 0;
+	
+	memset( buf, 0, _imageHeight * _imageWidth * sizeof( PixelData32 ) );
+	
+	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
+	{
+		ci = &(*it).second;
+		
+		if( ci->page != page )
+			continue;
+
+		size_t pixIndex = 0;
+
+		if( _flags & DRAW_OUTLINE )
+		{
+			// Loop over the outline spans and just draw them into the image.
+			for( Spans::iterator it = ci->outlineSpans.begin(); it != ci->outlineSpans.end(); ++it )
+			{
+//				pixIndex = ( _imageHeight - 1 - ( it->y - ci->yMin ) ) * _imageWidth + it->x - ci->xMin + ci->x;
+		 pixIndex = ci->x - ci->xMin + it->x + ( ci->y + ci->height - it->y ) * _imageWidth;
+				for( int w = 0; w < it->width; ++w )
+				{
+					buf[pixIndex].r = _outlineColor.r;
+					buf[pixIndex].g = _outlineColor.g;
+					buf[pixIndex].b = _outlineColor.b;
+					buf[pixIndex].a = it->coverage;
+					++pixIndex;
+				}
+			}
+		}
+
+		// Then loop over the regular glyph spans and blend them into the image.
+		for( Spans::iterator it = ci->bodySpans.begin(); it != ci->bodySpans.end(); ++it )
+		{
+//			pixIndex = ( _imageHeight - 1 - ( it->y - ci->yMin ) ) * _imageWidth + it->x - ci->xMin + penX;
+			pixIndex = ci->x - ci->xMin + it->x + ( ci->y + ci->height - it->y ) * _imageWidth;
+			for( int w = 0; w < it->width; ++w )
+			{
+				if( _flags & DRAW_OUTLINE )
+				{
+					float fg = it->coverage / 255.0f;
+					float bg = 1 - fg;
+					buf[pixIndex].r = _outlineColor.r * bg + _fontColor.r * fg;
+					buf[pixIndex].g = _outlineColor.g * bg + _fontColor.g * fg;
+					buf[pixIndex].b = _outlineColor.b * bg + _fontColor.b * fg;
+				}
+				else
+				{
+					buf[pixIndex].r = _fontColor.r;
+					buf[pixIndex].g = _fontColor.g;
+					buf[pixIndex].b = _fontColor.b;
+					buf[pixIndex].a = it->coverage;
+				}
+				++pixIndex;
+			}
+		}
+	}
+}
+
+
+//---------------------------------------------------------------------------------
+//	renderCallback()
+//---------------------------------------------------------------------------------
+void FontMaker::renderCallback( int y, int count, const FT_Span* spans, void* user )
+{
+	Spans *sptr = (Spans *)user;
+	for( int i = 0; i < count; ++i )
+		sptr->push_back( Span( spans[i].x, y, spans[i].len, spans[i].coverage ) );
+}
+
