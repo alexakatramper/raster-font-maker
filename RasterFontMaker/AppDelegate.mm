@@ -79,7 +79,15 @@ bool _useCustom = false;
 	// draw to image
 //	maker->makeLayout();
 	
-	maker->strokeChars();
+	if( ! maker->strokeChars() )
+	{
+		NSAlert* alert = [NSAlert alertWithMessageText:@"Missing glyph(s)."
+										 defaultButton:nil
+									   alternateButton:nil
+										   otherButton:nil
+							 informativeTextWithFormat:@"One ore more glyps are absent in the current font."];
+		[alert runModal];
+	}
 	maker->layoutChars();
 	
 
@@ -162,7 +170,15 @@ bool _useCustom = false;
 	}
 
 //	int pages = maker->makeLayout();
-	maker->strokeChars();
+	if( ! maker->strokeChars() )
+	{
+		NSAlert* alert = [NSAlert alertWithMessageText:@"Missing glyph(s)."
+										 defaultButton:nil
+									   alternateButton:nil
+										   otherButton:nil
+							 informativeTextWithFormat:@"One ore more glyps are absent in the current font."];
+		[alert runModal];
+	}
 	int pages = maker->layoutChars();
 
 //	NSString* imageFileName = [NSString stringWithCString:"/Users/Schutsky/Desktop/testfont2" encoding:NSASCIIStringEncoding ];
@@ -184,7 +200,7 @@ bool _useCustom = false;
 		unsigned char* data = [bmp bitmapData];
 		int* rgbaData = (int*)data;
 //		maker->drawPage( i, rgbaData );
-		maker->drawChars( 0, (PixelData32*)rgbaData );
+		maker->drawChars( i, (PixelData32*)rgbaData );
 
 		
 		CFURLRef url = 0;
@@ -330,7 +346,8 @@ bool _useCustom = false;
 	[panel setCanChooseDirectories:NO];
 	[panel setCanChooseFiles:YES];
 	[panel setAllowsMultipleSelection:NO];
-	[panel setAllowedFileTypes:[NSArray arrayWithObject:@"ttf"]];
+//	[panel setAllowedFileTypes:[NSArray arrayWithObject:@"ttf"]];
+	[panel setAllowedFileTypes:[NSArray arrayWithObjects:@"ttf",@"otf",@"ttc",nil]];
 	if( _fontPath )
 		[panel setDirectoryURL:[NSURL fileURLWithPath:_fontPath isDirectory:NO]];
 

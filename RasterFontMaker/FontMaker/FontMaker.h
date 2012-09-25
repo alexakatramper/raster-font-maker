@@ -66,7 +66,7 @@ struct CharInfo
 	
 	static bool compareByHeight( const CharInfo& i, const CharInfo& j ) { return ( i.height < j.height ); }
 	
-	void updateSize()
+	void updateSize( int padding )
 	{
 		xMin = 0;
 		xMax = 0;
@@ -117,8 +117,12 @@ struct CharInfo
 //		xadvance += ( xMax - xMin ) - width;
 //		yoffset += yMin;
 
-		width = xMax - xMin;
-		height = yMax - yMin;
+		xadvance += padding * 2;
+		xoffset += padding;
+		yoffset += padding;
+		
+		width = xMax - xMin + padding * 2;
+		height = yMax - yMin  + padding * 2;
 	}
 };
 
@@ -216,7 +220,7 @@ public:
 	bool fontLoaded() { return ( _face != 0 ); }
 	
 	// new stuff
-	void strokeChars();
+	bool strokeChars();
 	int layoutChars();
 	void drawChars( int page, PixelData32* buf );
 	
