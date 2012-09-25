@@ -161,8 +161,10 @@ bool _useCustom = false;
 		}
 	}
 
-	int pages = maker->makeLayout();
-	
+//	int pages = maker->makeLayout();
+	maker->strokeChars();
+	int pages = maker->layoutChars();
+
 //	NSString* imageFileName = [NSString stringWithCString:"/Users/Schutsky/Desktop/testfont2" encoding:NSASCIIStringEncoding ];
 	
 	for( int i = 0; i < pages; i++ )
@@ -181,7 +183,9 @@ bool _useCustom = false;
 	
 		unsigned char* data = [bmp bitmapData];
 		int* rgbaData = (int*)data;
-		maker->drawPage( i, rgbaData );
+//		maker->drawPage( i, rgbaData );
+		maker->drawChars( 0, (PixelData32*)rgbaData );
+
 		
 		CFURLRef url = 0;
 
@@ -364,13 +368,22 @@ bool _useCustom = false;
 	CFPreferencesSetAppValue( CFSTR("CustomCharset"), [_customSet string], kCFPreferencesCurrentApplication );
 
 	CFPreferencesSetAppValue( CFSTR("FontSize"), [_fontSize stringValue], kCFPreferencesCurrentApplication );
-//	CFPreferencesSetAppValue( CFSTR("FontColor"), [_mainColor color], kCFPreferencesCurrentApplication );
 
+	NSColor* color = [[_mainColor color] colorUsingColorSpace:[NSColorSpace genericRGBColorSpace]];
+	CFPreferencesSetAppValue( CFSTR("FontColor.r"), [NSString stringWithFormat:@"%f",[color redComponent]], kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("FontColor.g"), [NSString stringWithFormat:@"%f",[color greenComponent]], kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("FontColor.b"), [NSString stringWithFormat:@"%f",[color blueComponent]], kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("FontColor.a"), [NSString stringWithFormat:@"%f",[color alphaComponent]], kCFPreferencesCurrentApplication );
+
+	
 	CFPreferencesSetAppValue( CFSTR("DrawOutline"), ( ( [_drawOutline state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
 	CFPreferencesSetAppValue( CFSTR("OutlineWidth"), [_outlineWidth stringValue], kCFPreferencesCurrentApplication );
-//	CFPreferencesSetAppValue( CFSTR("OutlineColor"), [_outlineColor color], kCFPreferencesCurrentApplication );
 	
-//	CFPreferencesSetAppValue( CFSTR("Charset0000"), ( ( [_drawOutline state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
+	color = [[_outlineColor color] colorUsingColorSpace:[NSColorSpace genericRGBColorSpace]];
+	CFPreferencesSetAppValue( CFSTR("OutlineColor.r"), [NSString stringWithFormat:@"%f",[color redComponent]], kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("OutlineColor.g"), [NSString stringWithFormat:@"%f",[color greenComponent]], kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("OutlineColor.b"), [NSString stringWithFormat:@"%f",[color blueComponent]], kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("OutlineColor.a"), [NSString stringWithFormat:@"%f",[color alphaComponent]], kCFPreferencesCurrentApplication );
 	
 	CFPreferencesSetAppValue( CFSTR("CharsetXXXX"), ( ( [_charsetCustom state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
 	
@@ -389,9 +402,7 @@ bool _useCustom = false;
 		[_fontName setStringValue:[NSString stringWithCString:FontMaker::instance()->fontName() encoding:NSASCIIStringEncoding]];
 	}
 
-	NSString* value;
-	NSColor* color;
-	
+	NSString* value;	
 	
 	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("Padding"), kCFPreferencesCurrentApplication );
 	if( value )
@@ -417,10 +428,17 @@ bool _useCustom = false;
 	else
 		[_fontSize setIntegerValue:16];
 
-	
-	color = (NSColor*)CFPreferencesCopyAppValue( CFSTR("FontColor"), kCFPreferencesCurrentApplication );
-	if( value )
-		[_mainColor setColor:color];
+	NSString* rColor = (NSString*)CFPreferencesCopyAppValue( CFSTR("FontColor.r"), kCFPreferencesCurrentApplication );
+	NSString* gColor = (NSString*)CFPreferencesCopyAppValue( CFSTR("FontColor.g"), kCFPreferencesCurrentApplication );
+	NSString* bColor = (NSString*)CFPreferencesCopyAppValue( CFSTR("FontColor.b"), kCFPreferencesCurrentApplication );
+	NSString* aColor = (NSString*)CFPreferencesCopyAppValue( CFSTR("FontColor.a"), kCFPreferencesCurrentApplication );
+	if( rColor != nil & gColor != nil & bColor != nil & aColor != nil )
+		[_mainColor setColor:[NSColor colorWithCalibratedRed:[rColor floatValue]
+													   green:[gColor floatValue]
+														blue:[bColor floatValue]
+													   alpha:[aColor floatValue]]];
+	else
+		[_mainColor setColor:[NSColor whiteColor]];
 	
 	
 	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("DrawOutline"), kCFPreferencesCurrentApplication );
@@ -434,11 +452,19 @@ bool _useCustom = false;
 	[_outlineWidth setStringValue:value];
 
 
-	color = (NSColor*)CFPreferencesCopyAppValue( CFSTR("OutlineColor"), kCFPreferencesCurrentApplication );
-	if( value )
-		[_outlineColor setColor:color];
+	rColor = (NSString*)CFPreferencesCopyAppValue( CFSTR("OutlineColor.r"), kCFPreferencesCurrentApplication );
+	gColor = (NSString*)CFPreferencesCopyAppValue( CFSTR("OutlineColor.g"), kCFPreferencesCurrentApplication );
+	bColor = (NSString*)CFPreferencesCopyAppValue( CFSTR("OutlineColor.b"), kCFPreferencesCurrentApplication );
+	aColor = (NSString*)CFPreferencesCopyAppValue( CFSTR("OutlineColor.a"), kCFPreferencesCurrentApplication );
+	if( rColor != nil & gColor != nil & bColor != nil & aColor != nil )
+		[_outlineColor setColor:[NSColor colorWithCalibratedRed:[rColor floatValue]
+													   green:[gColor floatValue]
+														blue:[bColor floatValue]
+													   alpha:[aColor floatValue]]];
+	else
+		[_outlineColor setColor:[NSColor blackColor]];
 
-
+	
 	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("CharsetXXXX"), kCFPreferencesCurrentApplication );
 	if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
 		[_charsetCustom setState:NSOnState];
