@@ -25,21 +25,26 @@
 @property (assign) IBOutlet NSTextField* outlineWidth;
 @property (assign) IBOutlet NSColorWell* mainColor;
 @property (assign) IBOutlet NSColorWell* outlineColor;
+@property (assign) IBOutlet NSButton* charset0020;
+@property (assign) IBOutlet NSButton* charset00A0;
+@property (assign) IBOutlet NSButton* charset0400;
+@property (assign) IBOutlet NSButton* charset3000;
+@property (assign) IBOutlet NSButton* charset4E00;
 @property (assign) IBOutlet NSButton* charsetCustom;
+@property (assign) IBOutlet NSMatrix* fontFormat;
 
 
 - (IBAction)updateImage:(id)sender;
 - (IBAction)exportFont:(id)sender;
-- (IBAction)changeCharset:(id)sender;
 - (IBAction)setTextureWidth:(id)sender;
 - (IBAction)setTextureHeight:(id)sender;
 - (IBAction)chooseLoadFont:(id)sender;
-- (IBAction)customSetChanged:(id)sender;
 - (IBAction)fetchCharSet:(id)sender;
 
 - (void)saveSettings;
 - (void)loadSettings;
 - (void)applySettings;
+- (void)applyCharSets;
 - (void)exportFontWithName:(NSString*)fileName andPath:(NSString*)path;
 
 @end
