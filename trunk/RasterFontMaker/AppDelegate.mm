@@ -14,9 +14,6 @@
 @implementation AppDelegate
 
 
-bool _useCustom = false;
-
-
 - (void)dealloc
 {
     [super dealloc];
@@ -52,14 +49,6 @@ bool _useCustom = false;
 	int width = maker->imageWidth();
 	int height = maker->imageHeight();
 	
-	if( _useCustom )
-	{
-		NSString* chars = [_customSet string];
-		for( NSInteger i = 0; i < [chars length]; i++ )
-		{
-			maker->addChar( [chars characterAtIndex:i] );
-		}
-	}
 	
 	// create image
 	NSBitmapImageRep* bmp = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
@@ -160,14 +149,6 @@ bool _useCustom = false;
 	int width = maker->imageWidth();
 	int height = maker->imageHeight();
 	
-	if( _useCustom )
-	{
-		NSString* chars = [_customSet string];
-		for( NSInteger i = 0; i < [chars length]; i++ )
-		{
-			maker->addChar( [chars characterAtIndex:i] );
-		}
-	}
 
 //	int pages = maker->makeLayout();
 	if( ! maker->strokeChars() )
@@ -221,64 +202,43 @@ bool _useCustom = false;
 		CFRelease( destination );
 	}
 //	maker->exportTXT( "/Users/Schutsky/Desktop/testfont" );
-	maker->exportXML( [fileName cStringUsingEncoding:NSASCIIStringEncoding], [path cStringUsingEncoding:NSASCIIStringEncoding] );
+	
+	if( [_fontFormat selectedRow] == 0 )
+		maker->exportTXT( [fileName cStringUsingEncoding:NSASCIIStringEncoding], [path cStringUsingEncoding:NSASCIIStringEncoding] );
+	else
+		maker->exportXML( [fileName cStringUsingEncoding:NSASCIIStringEncoding], [path cStringUsingEncoding:NSASCIIStringEncoding] );
 }
 
 
-- (IBAction)changeCharset:(id)sender
+- (void)applyCharSets
 {
-	if( [[sender identifier] compare:@"0x0020"] == NSOrderedSame )
-	{
-		if( [(NSButton*)sender state] == NSOnState )
-			FontMaker::instance()->addCharRange( 0x0020, 0x007E);	//0x007F is 'del'
-		else
-			FontMaker::instance()->removeCharRange( 0x0020, 0x007E);
-		return;
-	}
-
-	if( [[sender identifier] compare:@"0x00A0"] == NSOrderedSame )
-	{
-		if( [(NSButton*)sender state] == NSOnState )
-			FontMaker::instance()->addCharRange( 0x00A0, 0x00FF);
-		else
-			FontMaker::instance()->removeCharRange( 0x00A0, 0x00FF);
-		return;
-	}
-
-	if( [[sender identifier] compare:@"0x0400"] == NSOrderedSame )
-	{
-		if( [(NSButton*)sender state] == NSOnState )
-			FontMaker::instance()->addCharRange( 0x0400, 0x04FF);
-		else
-			FontMaker::instance()->removeCharRange( 0x0400, 0x04FF);
-		return;
-	}
-
-	if( [[sender identifier] compare:@"0x3000"] == NSOrderedSame )
-	{
-		if( [(NSButton*)sender state] == NSOnState )
-			FontMaker::instance()->addCharRange( 0x3000, 0x30FF);
-		else
-			FontMaker::instance()->removeCharRange( 0x3000, 0x30FF);
-		return;
-	}
+	FontMaker* maker = FontMaker::instance();
 	
-	if( [[sender identifier] compare:@"0x4E00"] == NSOrderedSame )
-	{
-		if( [(NSButton*)sender state] == NSOnState )
-			FontMaker::instance()->addCharRange( 0x4E00, 0x9FFF);
-		else
-			FontMaker::instance()->removeCharRange( 0x4E00, 0x9FFF);
-		return;
-	}
+	maker->resetCharSet();
+
+//	if( [[sender identifier] compare:@"0x0020"] == NSOrderedSame )
+	if( [_charset0020 state] == NSOnState )
+		maker->addCharRange( 0x0020, 0x007E);	//0x007F is 'del'
+
+	if( [_charset00A0 state] == NSOnState )
+		maker->addCharRange( 0x00A0, 0x00FF);
+
+	if( [_charset0400 state] == NSOnState )
+		maker->addCharRange( 0x0400, 0x04FF);
+
+	if( [_charset3000 state] == NSOnState )
+		maker->addCharRange( 0x3000, 0x30FF);
 	
-	if( [[sender identifier] compare:@"0xXXXX"] == NSOrderedSame )
+	if( [_charset4E00 state] == NSOnState )
+		maker->addCharRange( 0x4E00, 0x9FFF);
+	
+	if( [_charsetCustom state] == NSOnState )
 	{
-		if( [(NSButton*)sender state] == NSOnState )
-			_useCustom = true;
-		else
-			_useCustom = false;
-		return;
+		NSString* chars = [_customSet string];
+		for( NSInteger i = 0; i < [chars length]; i++ )
+		{
+			maker->addChar( [chars characterAtIndex:i] );
+		}
 	}
 	
 }
@@ -385,6 +345,7 @@ bool _useCustom = false;
 	CFPreferencesSetAppValue( CFSTR("CustomCharset"), [_customSet string], kCFPreferencesCurrentApplication );
 
 	CFPreferencesSetAppValue( CFSTR("FontSize"), [_fontSize stringValue], kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("ExportFormat"), ( [_fontFormat selectedRow] == 0 ) ? CFSTR( "TXT" ) : CFSTR( "XML" ), kCFPreferencesCurrentApplication );
 
 	NSColor* color = [[_mainColor color] colorUsingColorSpace:[NSColorSpace genericRGBColorSpace]];
 	CFPreferencesSetAppValue( CFSTR("FontColor.r"), [NSString stringWithFormat:@"%f",[color redComponent]], kCFPreferencesCurrentApplication );
@@ -402,6 +363,11 @@ bool _useCustom = false;
 	CFPreferencesSetAppValue( CFSTR("OutlineColor.b"), [NSString stringWithFormat:@"%f",[color blueComponent]], kCFPreferencesCurrentApplication );
 	CFPreferencesSetAppValue( CFSTR("OutlineColor.a"), [NSString stringWithFormat:@"%f",[color alphaComponent]], kCFPreferencesCurrentApplication );
 	
+	CFPreferencesSetAppValue( CFSTR("Charset0020"), ( ( [_charset0020 state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("Charset00A0"), ( ( [_charset00A0 state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("Charset0400"), ( ( [_charset0400 state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("Charset3000"), ( ( [_charset3000 state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("Charset4E00"), ( ( [_charset4E00 state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
 	CFPreferencesSetAppValue( CFSTR("CharsetXXXX"), ( ( [_charsetCustom state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
 	
 	
@@ -445,6 +411,13 @@ bool _useCustom = false;
 	else
 		[_fontSize setIntegerValue:16];
 
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("ExportFormat"), kCFPreferencesCurrentApplication );
+	if( value && ( [value compare:@"XML"] == NSOrderedSame ) )
+		[_fontFormat selectCellAtRow:1 column:0];
+	else
+		[_fontFormat selectCellAtRow:0 column:0];
+
+	
 	NSString* rColor = (NSString*)CFPreferencesCopyAppValue( CFSTR("FontColor.r"), kCFPreferencesCurrentApplication );
 	NSString* gColor = (NSString*)CFPreferencesCopyAppValue( CFSTR("FontColor.g"), kCFPreferencesCurrentApplication );
 	NSString* bColor = (NSString*)CFPreferencesCopyAppValue( CFSTR("FontColor.b"), kCFPreferencesCurrentApplication );
@@ -482,11 +455,29 @@ bool _useCustom = false;
 		[_outlineColor setColor:[NSColor blackColor]];
 
 	
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("Charset0020"), kCFPreferencesCurrentApplication );
+	if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
+		[_charset0020 setState:NSOnState];
+
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("Charset00A0"), kCFPreferencesCurrentApplication );
+	if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
+		[_charset00A0 setState:NSOnState];
+
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("Charset0400"), kCFPreferencesCurrentApplication );
+	if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
+		[_charset0400 setState:NSOnState];
+
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("Charset3000"), kCFPreferencesCurrentApplication );
+	if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
+		[_charset3000 setState:NSOnState];
+
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("Charset4E00"), kCFPreferencesCurrentApplication );
+	if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
+		[_charset4E00 setState:NSOnState];
+
 	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("CharsetXXXX"), kCFPreferencesCurrentApplication );
 	if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
 		[_charsetCustom setState:NSOnState];
-	else
-		[_charsetCustom setState:NSOffState];
 	
 }
 
@@ -500,6 +491,10 @@ bool _useCustom = false;
 		maker->loadFont( [_fontPath cStringUsingEncoding:NSASCIIStringEncoding] );
 		[_fontName setStringValue:[NSString stringWithCString:FontMaker::instance()->fontName() encoding:NSASCIIStringEncoding]];
 	}
+	
+	
+	[self applyCharSets];
+
 	
 	maker->setDrawFrames( [_drawFrame state] == NSOnState );
 		
