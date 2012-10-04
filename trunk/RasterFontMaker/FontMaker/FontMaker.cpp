@@ -639,8 +639,8 @@ void FontMaker::exportTXT( const char* fileName, const char* path )
 	
 	FILE* f = fopen( fullName.c_str(), "w" );
 
-	fprintf( f, "info face=\"TestFont\" size=%i bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=3 padding=%i,%i,%i,%i spacing=0,0 outline=0\n",
-			_fontSize, _padding, _padding, _padding, _padding );
+	fprintf( f, "info face=\"%s\" size=%i bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=3 padding=%i,%i,%i,%i spacing=0,0 outline=0\n",
+			_face->family_name, _fontSize, _padding, _padding, _padding, _padding );
 	
 	fprintf( f, "common lineHeight=%i base=15 scaleW=%i scaleH=%i pages=%i packed=0 alphaChnl=1 redChnl=0 greenChnl=0 blueChnl=0\n",
 			_lineHeight, _imageWidth, _imageHeight, _pageCount );
