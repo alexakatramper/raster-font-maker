@@ -244,60 +244,60 @@
 }
 
 
-- (IBAction)setTextureWidth:(id)sender
-{
-	NSInteger i = [(NSPopUpButton*)sender indexOfSelectedItem];
-	switch( i )
-	{
-		case 0:
-			FontMaker::instance()->setImageWidth( 64 );
-			break;
-		case 1:
-			FontMaker::instance()->setImageWidth( 128 );
-			break;
-		case 2:
-			FontMaker::instance()->setImageWidth( 256 );
-			break;
-		case 3:
-			FontMaker::instance()->setImageWidth( 512 );
-			break;
-		case 4:
-			FontMaker::instance()->setImageWidth( 1024 );
-			break;
-		case 5:
-		default:
-			FontMaker::instance()->setImageWidth( 2048 );
-			break;
-	}
-}
-
-
-- (IBAction)setTextureHeight:(id)sender
-{
-	NSInteger i = [(NSPopUpButton*)sender indexOfSelectedItem];
-	switch( i )
-	{
-		case 0:
-			FontMaker::instance()->setImageHeight( 64 );
-			break;
-		case 1:
-			FontMaker::instance()->setImageHeight( 128 );
-			break;
-		case 2:
-			FontMaker::instance()->setImageHeight( 256 );
-			break;
-		case 3:
-			FontMaker::instance()->setImageHeight( 512 );
-			break;
-		case 4:
-			FontMaker::instance()->setImageHeight( 1024 );
-			break;
-		case 5:
-		default:
-			FontMaker::instance()->setImageHeight( 2048 );
-			break;
-	}
-}
+//- (IBAction)setTextureWidth:(id)sender
+//{
+//	NSInteger i = [(NSPopUpButton*)sender indexOfSelectedItem];
+//	switch( i )
+//	{
+//		case 0:
+//			FontMaker::instance()->setImageWidth( 64 );
+//			break;
+//		case 1:
+//			FontMaker::instance()->setImageWidth( 128 );
+//			break;
+//		case 2:
+//			FontMaker::instance()->setImageWidth( 256 );
+//			break;
+//		case 3:
+//			FontMaker::instance()->setImageWidth( 512 );
+//			break;
+//		case 4:
+//			FontMaker::instance()->setImageWidth( 1024 );
+//			break;
+//		case 5:
+//		default:
+//			FontMaker::instance()->setImageWidth( 2048 );
+//			break;
+//	}
+//}
+//
+//
+//- (IBAction)setTextureHeight:(id)sender
+//{
+//	NSInteger i = [(NSPopUpButton*)sender indexOfSelectedItem];
+//	switch( i )
+//	{
+//		case 0:
+//			FontMaker::instance()->setImageHeight( 64 );
+//			break;
+//		case 1:
+//			FontMaker::instance()->setImageHeight( 128 );
+//			break;
+//		case 2:
+//			FontMaker::instance()->setImageHeight( 256 );
+//			break;
+//		case 3:
+//			FontMaker::instance()->setImageHeight( 512 );
+//			break;
+//		case 4:
+//			FontMaker::instance()->setImageHeight( 1024 );
+//			break;
+//		case 5:
+//		default:
+//			FontMaker::instance()->setImageHeight( 2048 );
+//			break;
+//	}
+//}
 
 
 - (IBAction)chooseLoadFont:(id)sender
@@ -340,6 +340,8 @@
 //
 	CFPreferencesSetAppValue( CFSTR("SavePath"), _savePath,  kCFPreferencesCurrentApplication );
 	CFPreferencesSetAppValue( CFSTR("FontPath"), _fontPath,  kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("CharsetPath"), _charsetPath,  kCFPreferencesCurrentApplication );
+	
 	CFPreferencesSetAppValue( CFSTR("Padding"), [_padding stringValue], kCFPreferencesCurrentApplication );
 	CFPreferencesSetAppValue( CFSTR("Frames"), ( ( [_drawFrame state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
 	CFPreferencesSetAppValue( CFSTR("CustomCharset"), [_customSet string], kCFPreferencesCurrentApplication );
@@ -370,6 +372,9 @@
 	CFPreferencesSetAppValue( CFSTR("Charset4E00"), ( ( [_charset4E00 state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
 	CFPreferencesSetAppValue( CFSTR("CharsetXXXX"), ( ( [_charsetCustom state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
 	
+	CFPreferencesSetAppValue( CFSTR("TextureWidth"), [_textureWidth titleOfSelectedItem], kCFPreferencesCurrentApplication );
+	CFPreferencesSetAppValue( CFSTR("TextureHeight"), [_textureHeight titleOfSelectedItem], kCFPreferencesCurrentApplication );
+
 	
 	CFPreferencesAppSynchronize(  kCFPreferencesCurrentApplication );
 }
@@ -385,6 +390,9 @@
 		[_fontName setStringValue:[NSString stringWithCString:FontMaker::instance()->fontName() encoding:NSASCIIStringEncoding]];
 	}
 
+	_charsetPath = (NSString*)CFPreferencesCopyAppValue( CFSTR("CharsetPath"), kCFPreferencesCurrentApplication );
+
+	
 	NSString* value;	
 	
 	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("Padding"), kCFPreferencesCurrentApplication );
@@ -478,7 +486,14 @@
 	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("CharsetXXXX"), kCFPreferencesCurrentApplication );
 	if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
 		[_charsetCustom setState:NSOnState];
+
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("TextureWidth"), kCFPreferencesCurrentApplication );
+	if( value )
+		[_textureWidth selectItemWithTitle:value];
 	
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("TextureHeight"), kCFPreferencesCurrentApplication );
+	if( value )
+		[_textureHeight selectItemWithTitle:value];
 }
 
 
@@ -524,6 +539,56 @@
 	[fontColor getRed:&r green:&g blue:&b alpha:&a];
 	
 	maker->setOutlineColor( (unsigned char)( r * 255 ), (unsigned char)( g * 255 ), (unsigned char)( b * 255 ), (unsigned char)( a * 255 ) );
+	
+	
+	NSInteger i = [_textureWidth indexOfSelectedItem];
+	switch( i )
+	{
+		case 0:
+			maker->setImageWidth( 64 );
+			break;
+		case 1:
+			maker->setImageWidth( 128 );
+			break;
+		case 2:
+			maker->setImageWidth( 256 );
+			break;
+		case 3:
+			maker->setImageWidth( 512 );
+			break;
+		case 4:
+			maker->setImageWidth( 1024 );
+			break;
+		case 5:
+		default:
+			maker->setImageWidth( 2048 );
+			break;
+	}
+
+	
+	i = [_textureHeight indexOfSelectedItem];
+	switch( i )
+	{
+		case 0:
+			FontMaker::instance()->setImageHeight( 64 );
+			break;
+		case 1:
+			FontMaker::instance()->setImageHeight( 128 );
+			break;
+		case 2:
+			FontMaker::instance()->setImageHeight( 256 );
+			break;
+		case 3:
+			FontMaker::instance()->setImageHeight( 512 );
+			break;
+		case 4:
+			FontMaker::instance()->setImageHeight( 1024 );
+			break;
+		case 5:
+		default:
+			FontMaker::instance()->setImageHeight( 2048 );
+			break;
+	}
 }
 
 
@@ -534,11 +599,16 @@
 	[panel setCanChooseDirectories:NO];
 	[panel setCanChooseFiles:YES];
 	[panel setAllowsMultipleSelection:NO];
-//	[panel setAllowedFileTypes:[NSArray arrayWithObject:@"ttf"]];
+	if( _charsetPath )
+		[panel setDirectoryURL:[NSURL fileURLWithPath:_charsetPath isDirectory:NO]];
+	
 	[panel beginSheetModalForWindow:_window completionHandler:^(NSInteger result)
 	 {
 		 if( result == NSFileHandlingPanelOKButton )
 		 {
+			 [_charsetPath release];
+			 _charsetPath = [[panel.URL path] retain];
+
 			 NSError* error = 0;
 			 NSString* fileContent = [NSString stringWithContentsOfFile:[panel.URL path] encoding:NSUTF8StringEncoding error:&error];
 			 if( error == nil )

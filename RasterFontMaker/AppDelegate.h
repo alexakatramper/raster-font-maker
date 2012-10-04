@@ -12,6 +12,7 @@
 {
 	NSString* _fontPath;
 	NSString* _savePath;
+	NSString* _charsetPath;
 }
 
 @property (assign) IBOutlet NSWindow* window;
@@ -32,12 +33,14 @@
 @property (assign) IBOutlet NSButton* charset4E00;
 @property (assign) IBOutlet NSButton* charsetCustom;
 @property (assign) IBOutlet NSMatrix* fontFormat;
+@property (assign) IBOutlet NSPopUpButton*	textureWidth;
+@property (assign) IBOutlet NSPopUpButton*	textureHeight;
 
 
 - (IBAction)updateImage:(id)sender;
 - (IBAction)exportFont:(id)sender;
-- (IBAction)setTextureWidth:(id)sender;
-- (IBAction)setTextureHeight:(id)sender;
+//- (IBAction)setTextureWidth:(id)sender;
+//- (IBAction)setTextureHeight:(id)sender;
 - (IBAction)chooseLoadFont:(id)sender;
 - (IBAction)fetchCharSet:(id)sender;
 
