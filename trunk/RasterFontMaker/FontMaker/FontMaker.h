@@ -66,7 +66,7 @@ struct CharInfo
 	
 	static bool compareByHeight( const CharInfo& i, const CharInfo& j ) { return ( i.height < j.height ); }
 	
-	void updateSize( int padding )
+	void updateMetrics( int padding )
 	{
 		xMin = 0;
 		xMax = 0;
