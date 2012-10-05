@@ -562,7 +562,8 @@ void FontMaker::exportXML( const char* fileName, const char* path )
 	sprintf( tmpStr, "%i,%i,%i,%i", _padding, _padding, _padding, _padding );
 	xInfo.addAttribute( "padding", tmpStr );
 	xInfo.addAttribute( "spacing", "0,0" );
-	xInfo.addAttribute( "outline", "0" );
+//	xInfo.addAttribute( "outline", "0" );
+	_addIntAttribute( xInfo, "outline", _outlineWidth );
 	
 
 	//		<common lineHeight="72" base="57" scaleW="1024" scaleH="2048" pages="1" packed="0" alphaChnl="1" redChnl="0" greenChnl="0" blueChnl="0"/>
@@ -639,11 +640,11 @@ void FontMaker::exportTXT( const char* fileName, const char* path )
 	
 	FILE* f = fopen( fullName.c_str(), "w" );
 
-	fprintf( f, "info face=\"%s\" size=%i bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=3 padding=%i,%i,%i,%i spacing=0,0 outline=0\n",
-			_face->family_name, _fontSize, _padding, _padding, _padding, _padding );
+	fprintf( f, "info face=\"%s\" size=%i bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=1 padding=%i,%i,%i,%i spacing=0,0 outline=%f\n",
+			_face->family_name, _fontSize, _padding, _padding, _padding, _padding, _outlineWidth );
 	
-	fprintf( f, "common lineHeight=%i base=15 scaleW=%i scaleH=%i pages=%i packed=0 alphaChnl=1 redChnl=0 greenChnl=0 blueChnl=0\n",
-			_lineHeight, _imageWidth, _imageHeight, _pageCount );
+	fprintf( f, "common lineHeight=%li base=%li scaleW=%i scaleH=%i pages=%i packed=0 alphaChnl=1 redChnl=0 greenChnl=0 blueChnl=0\n",
+			/*_lineHeight*/ _face->size->metrics.height / 64, _face->size->metrics.ascender / 64, _imageWidth, _imageHeight, _pageCount );
 	
 	if( _pageCount == 1 )
 	{
@@ -744,6 +745,7 @@ bool FontMaker::strokeChars()
 	CharInfo* ci = 0;
 	_lineHeight = 0;
 	int maxYOffset = 0;
+	int minYOffset = 100500;
 
 	
 	// Set up a stroker.
@@ -774,8 +776,8 @@ bool FontMaker::strokeChars()
 		FT_Load_Glyph( _face, glyph_index, FT_LOAD_DEFAULT );
 		FT_Get_Glyph( _face->glyph, &ci->glyph );
 		
-		ci->width = _face->glyph->metrics.width / 64 + _padding * 2;
-		ci->height = _face->glyph->metrics.height / 64 + _padding * 2;
+//		ci->width = _face->glyph->metrics.width / 64 + _padding * 2;
+//		ci->height = _face->glyph->metrics.height / 64 + _padding * 2;
 
 		ci->xoffset = _face->glyph->metrics.horiBearingX / 64;
 		ci->yoffset = _face->glyph->metrics.horiBearingY / 64;
@@ -825,19 +827,26 @@ bool FontMaker::strokeChars()
 			FT_Done_Glyph( glyph );
 		}
 		
-		ci->updateSize( _padding );
+//		ci->updateMetrics( _padding );
 		
 		if( _lineHeight < ci->height )
 			_lineHeight = ci->height;
 
 		if( maxYOffset < ci->yoffset )
 			maxYOffset = ci->yoffset;
+
+		if( minYOffset > ci->yoffset )
+			minYOffset = ci->yoffset;
+
+		ci->updateMetrics( _padding );
 	}
 	
 	// update yoffset for all
+//	maxYOffset = ( _face->size->metrics.ascender + _face->size->metrics.descender ) / 64;
+//	maxYOffset += _face->size->metrics.descender / 64;
 	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
 	{
-		it->second.yoffset = maxYOffset - it->second.yoffset;
+		it->second.yoffset = maxYOffset - it->second.yoffset + minYOffset;
 	}
 
 	FT_Stroker_Done( stroker );
@@ -891,9 +900,7 @@ int FontMaker::layoutChars()
 			maxHeight = 0;
 			charLine.clear();
 		}
-		
-//		ci->yoffset = maxYOffset - ci->yoffset;
-		
+				
 		ci->page = _pageCount;
 		ci->x = x;
 		ci->y = y;
