@@ -27,6 +27,9 @@ FontMaker* FontMaker::_instance = 0;
 #define DRAW_OUTLINE	0x02
 #define DRAW_BBOX		0x04
 
+#define _DPI_ 72	//default value
+//#define _DPI_ 96
+
 //---------------------------------------------------------------------------------
 //	FontMaker()
 //---------------------------------------------------------------------------------
@@ -112,7 +115,7 @@ void FontMaker::setFontSize( int size )
 {
 	assert( _face );
 	_fontSize = size;
-	FT_Set_Char_Size( _face, 0, size * 64, 72, 72 );
+	FT_Set_Char_Size( _face, 0, size * 64, _DPI_, _DPI_ );
 }
 
 
@@ -189,123 +192,123 @@ void FontMaker::removeCharRange( FT_UInt ch1, FT_UInt ch2 )
 //---------------------------------------------------------------------------------
 //	makeLayout()
 //---------------------------------------------------------------------------------
-int FontMaker::makeLayout()
-{
-	CharInfo* ci = 0;
-	
-	_lineHeight = 0;
-	int maxYOffset = 0;
-	
-	// 1. load glyphs and get metrics
-	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
-	{
-		ci = &(*it).second;
-		FT_UInt glyph_index = FT_Get_Char_Index( _face, ci->charcode );
-		
-		if( glyph_index == 0 )
-			printf( "WARNING: no glyph for charcode 0x%X\n", ci->charcode );
-
-		FT_Load_Glyph( _face, glyph_index, FT_LOAD_DEFAULT );
-		FT_Get_Glyph( _face->glyph, &ci->glyph );
-		
-		ci->width = _face->glyph->metrics.width / 64 + _padding * 2; //bbox.xMax - bbox.xMin;
-		ci->height = _face->glyph->metrics.height / 64 + _padding * 2; //bbox.yMax - bbox.yMin;
-		
-		ci->xoffset = 0;
-
-		ci->yoffset = _face->glyph->metrics.horiBearingY / 64;
-		ci->xadvance = _face->glyph->metrics.horiAdvance / 64;
-
-
-		if( maxYOffset < ci->yoffset )
-			maxYOffset = ci->yoffset;
-		
-		if( _lineHeight < ci->height )
-			_lineHeight = ci->height;
-	}
-	
-	// 2.sort by height (try to optimize layout - ?)
-	// TODO: sort by height (try to optimize layout)
-//	sort( _charSet.begin(), _charSet.end(), CharInfo::compareByHeight );
-	
-	// 3. set positions - arrange by rows & colums
-	// TODO: apply padding
-	_pageCount = 0;
-	int x = 0;
-	int y = 0;
-	int maxHeight = 0;
-	
-	
-	vector<CharInfo*> charLine;
-	
-	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
-	{
-		ci = &(*it).second;
-		
-		if( ( x + ci->width ) > _imageWidth )
-		{
-			// put chars of current line into vector
-			// when the line is done - check if glyphs are not exeeded the page's height
-			// and move this line to new page if needed
-						
-			for( size_t m = 0; m < charLine.size(); m++ )
-			{
-				if( ( charLine[m]->y + charLine[m]->height * 2 ) >= _imageHeight )
-				{
-					++_pageCount;
-					y = 0;
-					// move this line to new page
-					for( size_t k = 0; k < charLine.size(); k++ )
-					{
-						charLine[k]->page = _pageCount;
-						charLine[k]->y = 0;
-					}
-					break;
-				}
-			}
-
-			// start new line
-			x = 0;
-			y += maxHeight;
-			maxHeight = 0;
-			charLine.clear();
-		}
-		
-		ci->yoffset = maxYOffset - ci->yoffset;
-
-		ci->page = _pageCount;
-		ci->x = x;
-		ci->y = y;
-		
-		x += ci->width;
-		
-		if( maxHeight < ci->height )
-			maxHeight = ci->height;
-		
-		charLine.push_back( ci );
-	}
-	
-	// check the last line if it is not out of page bottom
-	for( size_t j = 0; j < charLine.size(); j++ )
-	{
-		if( ( charLine[j]->y + charLine[j]->height ) >= _imageHeight )
-		{
-			++_pageCount;
-			// move this line to new page
-			for( size_t k = 0; k < charLine.size(); k++ )
-			{
-				charLine[k]->page = _pageCount;
-				charLine[k]->y = 0;
-			}
-			break;
-		}
-	}
-
-	
-	++_pageCount;
-	
-	return _pageCount;
-}
+//int FontMaker::makeLayout()
+//{
+//	CharInfo* ci = 0;
+//	
+//	_lineHeight = 0;
+//	int maxYOffset = 0;
+//	
+//	// 1. load glyphs and get metrics
+//	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
+//	{
+//		ci = &(*it).second;
+//		FT_UInt glyph_index = FT_Get_Char_Index( _face, ci->charcode );
+//		
+//		if( glyph_index == 0 )
+//			printf( "WARNING: no glyph for charcode 0x%X\n", ci->charcode );
+//
+//		FT_Load_Glyph( _face, glyph_index, FT_LOAD_DEFAULT );
+//		FT_Get_Glyph( _face->glyph, &ci->glyph );
+//		
+//		ci->width = _face->glyph->metrics.width / 64 + _padding * 2; //bbox.xMax - bbox.xMin;
+//		ci->height = _face->glyph->metrics.height / 64 + _padding * 2; //bbox.yMax - bbox.yMin;
+//		
+//		ci->xoffset = 0;
+//
+//		ci->yoffset = _face->glyph->metrics.horiBearingY / 64;// + _padding;
+//		ci->xadvance = _face->glyph->metrics.horiAdvance / 64;
+//
+//
+//		if( maxYOffset < ci->yoffset )
+//			maxYOffset = ci->yoffset;
+//		
+//		if( _lineHeight < ci->height )
+//			_lineHeight = ci->height;
+//	}
+//	
+//	// 2.sort by height (try to optimize layout - ?)
+//	// TODO: sort by height (try to optimize layout)
+////	sort( _charSet.begin(), _charSet.end(), CharInfo::compareByHeight );
+//	
+//	// 3. set positions - arrange by rows & colums
+//	// TODO: apply padding
+//	_pageCount = 0;
+//	int x = 0;
+//	int y = 0;
+//	int maxHeight = 0;
+//	
+//	
+//	vector<CharInfo*> charLine;
+//	
+//	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
+//	{
+//		ci = &(*it).second;
+//		
+//		if( ( x + ci->width ) > _imageWidth )
+//		{
+//			// put chars of current line into vector
+//			// when the line is done - check if glyphs are not exeeded the page's height
+//			// and move this line to new page if needed
+//						
+//			for( size_t m = 0; m < charLine.size(); m++ )
+//			{
+//				if( ( charLine[m]->y + charLine[m]->height * 2 ) >= _imageHeight )
+//				{
+//					++_pageCount;
+//					y = 0;
+//					// move this line to new page
+//					for( size_t k = 0; k < charLine.size(); k++ )
+//					{
+//						charLine[k]->page = _pageCount;
+//						charLine[k]->y = 0;
+//					}
+//					break;
+//				}
+//			}
+//
+//			// start new line
+//			x = 0;
+//			y += maxHeight;
+//			maxHeight = 0;
+//			charLine.clear();
+//		}
+//		
+//		ci->yoffset = maxYOffset - ci->yoffset;
+//
+//		ci->page = _pageCount;
+//		ci->x = x;
+//		ci->y = y;
+//		
+//		x += ci->width;
+//		
+//		if( maxHeight < ci->height )
+//			maxHeight = ci->height;
+//		
+//		charLine.push_back( ci );
+//	}
+//	
+//	// check the last line if it is not out of page bottom
+//	for( size_t j = 0; j < charLine.size(); j++ )
+//	{
+//		if( ( charLine[j]->y + charLine[j]->height ) >= _imageHeight )
+//		{
+//			++_pageCount;
+//			// move this line to new page
+//			for( size_t k = 0; k < charLine.size(); k++ )
+//			{
+//				charLine[k]->page = _pageCount;
+//				charLine[k]->y = 0;
+//			}
+//			break;
+//		}
+//	}
+//
+//	
+//	++_pageCount;
+//	
+//	return _pageCount;
+//}
 
 
 //---------------------------------------------------------------------------------
@@ -665,7 +668,7 @@ void FontMaker::exportTXT( const char* fileName, const char* path )
 	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
 	{
 		ci = &(*it).second;
-		fprintf( f, "char id=%-5u x=%-4i y=%-4i width=%-4i height=%-4i xoffset=%-4i yoffset=%-4i xadvance=%-4i page=%-4i chnl=15\n",
+		fprintf( f, "char id=%-4u x=%-5i y=%-5i width=%-5i height=%-5i xoffset=%-5i yoffset=%-5i xadvance=%-5i page=%-2i chnl=15\n",
 				ci->charcode, ci->x, ci->y, ci->width, ci->height, ci->xoffset, ci->yoffset, ci->xadvance, ci->page );
 	}
 	
@@ -776,11 +779,8 @@ bool FontMaker::strokeChars()
 		FT_Load_Glyph( _face, glyph_index, FT_LOAD_DEFAULT );
 		FT_Get_Glyph( _face->glyph, &ci->glyph );
 		
-//		ci->width = _face->glyph->metrics.width / 64 + _padding * 2;
-//		ci->height = _face->glyph->metrics.height / 64 + _padding * 2;
-
-		ci->xoffset = _face->glyph->metrics.horiBearingX / 64;
-		ci->yoffset = _face->glyph->metrics.horiBearingY / 64;
+		ci->xoffset = _face->glyph->metrics.horiBearingX / 64 - _outlineWidth;// - _padding;
+		ci->yoffset = ( _face->size->metrics.ascender - _face->glyph->metrics.horiBearingY ) / 64;
 		
 		ci->xadvance = _face->glyph->metrics.horiAdvance / 64;
 
@@ -832,11 +832,11 @@ bool FontMaker::strokeChars()
 		if( _lineHeight < ci->height )
 			_lineHeight = ci->height;
 
-		if( maxYOffset < ci->yoffset )
-			maxYOffset = ci->yoffset;
-
-		if( minYOffset > ci->yoffset )
-			minYOffset = ci->yoffset;
+//		if( maxYOffset < ci->yoffset )
+//			maxYOffset = ci->yoffset;
+//
+//		if( minYOffset > ci->yoffset )
+//			minYOffset = ci->yoffset;
 
 		ci->updateMetrics( _padding );
 	}
@@ -844,10 +844,10 @@ bool FontMaker::strokeChars()
 	// update yoffset for all
 //	maxYOffset = ( _face->size->metrics.ascender + _face->size->metrics.descender ) / 64;
 //	maxYOffset += _face->size->metrics.descender / 64;
-	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
-	{
-		it->second.yoffset = maxYOffset - it->second.yoffset + minYOffset;
-	}
+//	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
+//	{
+//		it->second.yoffset = maxYOffset - it->second.yoffset + minYOffset;
+//	}
 
 	FT_Stroker_Done( stroker );
 	
