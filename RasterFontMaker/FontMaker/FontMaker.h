@@ -117,9 +117,9 @@ struct CharInfo
 //		xadvance += ( xMax - xMin ) - width;
 //		yoffset += yMin;
 
-		xadvance += padding * 2;
-		xoffset += padding;
-		yoffset += padding;
+//		xadvance += padding * 2;
+		xoffset -= padding;
+		yoffset -= padding;
 		
 		width = xMax - xMin + padding * 2;
 		height = yMax - yMin  + padding * 2;
@@ -195,7 +195,7 @@ public:
 	void addCharRange( FT_UInt ch1, FT_UInt ch2 );	// TODO: remake to UTF-16, remake to 'addCharRange'
 	void removeCharRange( FT_UInt ch1, FT_UInt ch2 );	// TODO: remake to UTF-16, remake to 'addCharRange'
 	
-	int makeLayout();
+//	int makeLayout();
 	
 	void drawPage( int page, int* abgr );
 
