@@ -14,9 +14,12 @@
 
 #include <map>
 #include <vector>
+#include <string>
+#include <assert.h>
 
 using std::map;
 using std::vector;
+using std::string;
 
 struct Span
 {
@@ -176,7 +179,7 @@ public:
 	}
 	
 	void cleanup();
-	void loadFont( const char* fileName );
+	void loadFont( const char* fileName, long faceIndex = 0 );
 	void setFontSize( int size );
 	int fontSize() { return _fontSize; }
 	
@@ -208,6 +211,7 @@ public:
 	void setPadding( int value ) { _padding = value; }
 	
 	const char* fontName();
+	const char* styleName();
 	
 	static void spanFunc( int y, int count, const FT_Span* spans, void* user );
 	static void renderCallback( int y, int count, const FT_Span* spans, void* user );
@@ -223,6 +227,9 @@ public:
 	bool strokeChars();
 	int layoutChars();
 	void drawChars( int page, PixelData32* buf );
+	
+	int stylesCount() { if( _face == 0 ) return 0; return (int)_face->num_faces; }
+	string& styleName( int i ) { return _faceNames.at( i ); }
 	
 private:
 	FT_Library	_library;
@@ -240,4 +247,6 @@ private:
 	PixelData32	_outlineColor;
 	
 	int			_flags;
+	
+	vector<string>	_faceNames;
 };

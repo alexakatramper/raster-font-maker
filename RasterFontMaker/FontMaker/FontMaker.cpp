@@ -62,17 +62,20 @@ void FontMaker::cleanup()
 	if( _face )
 		FT_Done_Face( _face );
 	_face = 0;
+	
+	_faceNames.clear();
 }
 
 
 //---------------------------------------------------------------------------------
 //	loadFont()
 //---------------------------------------------------------------------------------
-void FontMaker::loadFont( const char* fileName )
+void FontMaker::loadFont( const char* fileName, long faceIndex )
 {
 	cleanup();
+	long currentFace = 0;
 	
-	int error = FT_New_Face( _library, fileName, 0, &_face );
+	int error = FT_New_Face( _library, fileName, currentFace, &_face );
 	if( error == FT_Err_Unknown_File_Format )
 	{
 		printf( "ERROR: unsupported file format\n" );
@@ -83,15 +86,53 @@ void FontMaker::loadFont( const char* fileName )
 		printf( "ERROR: can't load font, error# %i\n", error );
 		return;
 	}
+
+	_faceNames.push_back( string( _face->style_name ) );
+	
+	// как бы это делать не здесь и/или не так, а то несколько раз фонт перечитывать...
+	if( _face->num_faces  > 1 )
+	{
+		for( currentFace = 1; currentFace < _face->num_faces; currentFace++ )
+		{
+			FT_Done_Face( _face );
+			_face = 0;
+
+			error = FT_New_Face( _library, fileName, currentFace, &_face );
+			if( error != FT_Err_Ok )
+			{
+				printf( "ERROR: can't load font, error# %i\n", error );
+				return;
+			}
+			
+			_faceNames.push_back( string( _face->style_name ) );
+		}
+	}
+
+	// и только теперь грузим тот что надо... беда-беда...
+	if( ( currentFace != faceIndex ) && ( faceIndex < _face->num_faces ) )
+	{
+		FT_Done_Face( _face );
+		_face = 0;
+		
+		error = FT_New_Face( _library, fileName, faceIndex, &_face );
+		if( error != FT_Err_Ok )
+		{
+			printf( "ERROR: can't load font, error# %i\n", error );
+			return;
+		}
+	}
+	
 	
 	printf( "OK: font loaded\n" );
 	printf( "- name:		%s\n", _face->family_name );
 	printf( "- style:		%s\n", _face->style_name );	
 	printf( "- faces:		%li\n", _face->num_faces );
 	printf( "- charmaps:	%i\n", _face->num_charmaps );
+	printf( "- style_flags:	0x%lX\n", _face->style_flags );
 	printf( "- platform_id:	%i\n", _face->charmap->platform_id );
 	printf( "- encoding_id:	%i\n", _face->charmap->encoding_id );
 	printf( "- glyps:		%li\n", _face->num_glyphs );
+	
 	
 	
 	
@@ -707,6 +748,16 @@ const char* FontMaker::fontName()
 {
 	if( _face )
 		return _face->family_name;
+	return 0;
+}
+
+//---------------------------------------------------------------------------------
+//	styleName()
+//---------------------------------------------------------------------------------
+const char* FontMaker::styleName()
+{
+	if( _face )
+		return _face->style_name;
 	return 0;
 }
 

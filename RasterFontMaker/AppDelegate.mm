@@ -27,6 +27,18 @@
 
 
 
+- (void)updateFontStyles
+{
+	FontMaker* maker = FontMaker::instance();
+	int n = maker->stylesCount();
+	[_fontStyle removeAllItems];
+	for( int i = 0; i < n; i++ )
+	{
+		const char* tmp = maker->styleName(i).c_str();
+		NSString* styleName = [NSString stringWithFormat:@"%s", tmp];
+		[_fontStyle addItemWithTitle:styleName];
+	}
+}
 
 
 - (IBAction)updateImage:(id)sender
@@ -115,8 +127,9 @@
 	
 	
 	
-	[panel setNameFieldStringValue:[NSString stringWithFormat:@"%s_%li.fnt", FontMaker::instance()->fontName(), [_fontSize integerValue] ]];
-													//FontMaker::instance()->fontSize() ]];
+	[panel setNameFieldStringValue:[NSString stringWithFormat:@"%s_%s_%li.fnt",
+													FontMaker::instance()->fontName(), FontMaker::instance()->styleName(), [_fontSize integerValue] ]];
+
 //	[panel setExtensionHidden:NO];
 	[panel setCanSelectHiddenExtension:YES];
 //	[panel setCanChooseDirectories:NO];
@@ -320,12 +333,20 @@
 			_fontPath = [[panel.URL path] retain];
 			
 			FontMaker::instance()->loadFont( [_fontPath cStringUsingEncoding:NSASCIIStringEncoding] );
-			
+			[self updateFontStyles];
 			[_fontName setStringValue:[NSString stringWithCString:FontMaker::instance()->fontName() encoding:NSASCIIStringEncoding]];
 			
 			[self saveSettings];
 		}
 	}];
+}
+
+
+- (IBAction)chooseLoadFontWithStyle:(id)sender
+{
+	NSInteger i = [(NSPopUpButton*)sender indexOfSelectedItem];
+	FontMaker::instance()->loadFont( [_fontPath cStringUsingEncoding:NSASCIIStringEncoding], i );
+	[self saveSettings];
 }
 
 
@@ -387,6 +408,7 @@
 	if( _fontPath )
 	{
 		FontMaker::instance()->loadFont( [_fontPath cStringUsingEncoding:NSASCIIStringEncoding] );
+		[self updateFontStyles];
 		[_fontName setStringValue:[NSString stringWithCString:FontMaker::instance()->fontName() encoding:NSASCIIStringEncoding]];
 	}
 
@@ -503,7 +525,9 @@
 	
 	if( _fontPath )
 	{
-		maker->loadFont( [_fontPath cStringUsingEncoding:NSASCIIStringEncoding] );
+//		maker->loadFont( [_fontPath cStringUsingEncoding:NSASCIIStringEncoding] );
+//		[self updateFontStyles];
+		FontMaker::instance()->loadFont( [_fontPath cStringUsingEncoding:NSASCIIStringEncoding], [_fontStyle indexOfSelectedItem] );
 		[_fontName setStringValue:[NSString stringWithCString:FontMaker::instance()->fontName() encoding:NSASCIIStringEncoding]];
 	}
 	
