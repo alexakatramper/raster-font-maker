@@ -35,6 +35,7 @@
 @property (assign) IBOutlet NSMatrix* fontFormat;
 @property (assign) IBOutlet NSPopUpButton*	textureWidth;
 @property (assign) IBOutlet NSPopUpButton*	textureHeight;
+@property (assign) IBOutlet NSPopUpButton*	fontStyle;
 
 
 - (IBAction)updateImage:(id)sender;
@@ -42,6 +43,7 @@
 //- (IBAction)setTextureWidth:(id)sender;
 //- (IBAction)setTextureHeight:(id)sender;
 - (IBAction)chooseLoadFont:(id)sender;
+- (IBAction)chooseLoadFontWithStyle:(id)sender;
 - (IBAction)fetchCharSet:(id)sender;
 
 - (void)saveSettings;
@@ -49,5 +51,7 @@
 - (void)applySettings;
 - (void)applyCharSets;
 - (void)exportFontWithName:(NSString*)fileName andPath:(NSString*)path;
+
+- (void)updateFontStyles;
 
 @end
