@@ -231,6 +231,8 @@ public:
 	int stylesCount() { if( _face == 0 ) return 0; return (int)_face->num_faces; }
 	string& styleName( int i ) { return _faceNames.at( i ); }
 	
+	int pageCount() { return _pageCount; }
+	
 private:
 	FT_Library	_library;
 	FT_Face		_face;

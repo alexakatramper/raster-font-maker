@@ -22,7 +22,7 @@
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
 	// Insert code here to initialize your application
-	[self loadSettings];
+	[self loadLastSettings];
 }
 
 
@@ -43,6 +43,13 @@
 
 - (IBAction)updateImage:(id)sender
 {
+	_currentPage = 0;
+	[self previewPage:0];
+}
+
+
+- (void)previewPage:(int)page
+{
 	FontMaker* maker = FontMaker::instance();
 	
 	if( ! maker->fontLoaded() )
@@ -61,7 +68,22 @@
 	int width = maker->imageWidth();
 	int height = maker->imageHeight();
 	
+	if( ! maker->strokeChars() )
+	{
+		NSAlert* alert = [NSAlert alertWithMessageText:@"Missing glyph(s)."
+										 defaultButton:nil
+									   alternateButton:nil
+										   otherButton:nil
+							 informativeTextWithFormat:@"One ore more glyps are absent in the current font."];
+		[alert runModal];
+	}
+	int pages = maker->layoutChars();
+	if( page >= pages )
+		return;
 	
+	[_pageOfPages setStringValue:[NSString stringWithFormat:@"Page %i of %i", page+1, pages]];
+	
+
 	// create image
 	NSBitmapImageRep* bmp = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
 																	pixelsWide:width
@@ -76,26 +98,12 @@
 	
 	
 	
-
+	
 	// draw to image
-//	maker->makeLayout();
-	
-	if( ! maker->strokeChars() )
-	{
-		NSAlert* alert = [NSAlert alertWithMessageText:@"Missing glyph(s)."
-										 defaultButton:nil
-									   alternateButton:nil
-										   otherButton:nil
-							 informativeTextWithFormat:@"One ore more glyps are absent in the current font."];
-		[alert runModal];
-	}
-	maker->layoutChars();
-	
-
 	unsigned char* data = [bmp bitmapData];
 	int* rgbaData = (int*)data;
 //	maker->drawPage( 0, rgbaData );
-	maker->drawChars( 0, (PixelData32*)rgbaData );
+	maker->drawChars( page, (PixelData32*)rgbaData );
 
 	// update image view
 	NSSize size;
@@ -105,6 +113,15 @@
 	
 	[_imageView setImage:image];
 
+	if( _currentPage > 0 )
+		[_showLastPage setEnabled:YES];
+	else
+		[_showLastPage setEnabled:NO];
+	
+	if( _currentPage + 1 < pages )
+		[_showNextPage setEnabled:YES];
+	else
+		[_showNextPage setEnabled:NO];
 }
 
 
@@ -147,7 +164,7 @@
 				 [_savePath release];
 			 _savePath = [[panel.directoryURL path] retain];
 			 [self exportFontWithName:fileName andPath:_savePath];
-			 [self saveSettings];
+			 [self saveLastSettings];
 		 }
 	 }];
 }
@@ -157,7 +174,7 @@
 	FontMaker* maker = FontMaker::instance();
 
 	[self applySettings];
-	[self saveSettings];
+	[self saveLastSettings];
 
 	int width = maker->imageWidth();
 	int height = maker->imageHeight();
@@ -336,7 +353,7 @@
 			[self updateFontStyles];
 			[_fontName setStringValue:[NSString stringWithCString:FontMaker::instance()->fontName() encoding:NSASCIIStringEncoding]];
 			
-			[self saveSettings];
+			[self saveLastSettings];
 		}
 	}];
 }
@@ -346,7 +363,7 @@
 {
 	NSInteger i = [(NSPopUpButton*)sender indexOfSelectedItem];
 	FontMaker::instance()->loadFont( [_fontPath cStringUsingEncoding:NSASCIIStringEncoding], i );
-	[self saveSettings];
+//	[self saveLastSettings];
 }
 
 
@@ -356,7 +373,7 @@
 }
 
 
-- (void)saveSettings
+- (void)saveLastSettings
 {
 //
 	CFPreferencesSetAppValue( CFSTR("SavePath"), _savePath,  kCFPreferencesCurrentApplication );
@@ -401,7 +418,7 @@
 }
 
 
-- (void)loadSettings
+- (void)loadLastSettings
 {
 	_savePath = (NSString*)CFPreferencesCopyAppValue( CFSTR("SavePath"), kCFPreferencesCurrentApplication );
 	_fontPath = (NSString*)CFPreferencesCopyAppValue( CFSTR("FontPath"), kCFPreferencesCurrentApplication );
@@ -652,13 +669,259 @@
 				 
 				 [_customSet setString:setStr];
 
-				 [self saveSettings];
+				 [self saveLastSettings];
 			 }
 			 
 			 
 		 }
 	 }];
 }
+
+
+- (IBAction)loadSettings:(id)sender
+{
+	NSOpenPanel* panel = [NSOpenPanel openPanel];
+	[panel setCanChooseDirectories:NO];
+	[panel setCanChooseFiles:YES];
+	[panel setAllowsMultipleSelection:NO];
+	//	[panel setAllowedFileTypes:[NSArray arrayWithObject:@"ttf"]];
+	[panel setAllowedFileTypes:[NSArray arrayWithObjects:@"rfm",nil]];
+	if( _projectPath )
+		[panel setDirectoryURL:[NSURL fileURLWithPath:_projectPath isDirectory:NO]];
+	
+	
+	[panel beginSheetModalForWindow:_window completionHandler:^(NSInteger result)
+	 {
+		 if( result == NSFileHandlingPanelOKButton )
+		 {
+			 [_projectPath release];
+			 _projectPath = [[panel.URL path] retain];
+
+			 NSDictionary* settings = [NSDictionary dictionaryWithContentsOfFile:[[panel URL]path]];
+
+			 [_savePath release];
+			 _savePath = (NSString*)[[settings valueForKey:@"SavePath"] retain];
+			 
+			 [_fontPath release];
+			 _fontPath = (NSString*)[[settings valueForKey:@"FontPath"] retain];
+			 if( _fontPath )
+			 {
+				 FontMaker::instance()->loadFont( [_fontPath cStringUsingEncoding:NSASCIIStringEncoding] );
+				 [self updateFontStyles];
+				 [_fontName setStringValue:[NSString stringWithCString:FontMaker::instance()->fontName() encoding:NSASCIIStringEncoding]];
+			 }
+			 
+			 [_charsetPath release];
+			 _charsetPath = (NSString*)[[settings valueForKey:@"CharsetPath"] retain];
+			 
+			 
+			 NSString* value;
+			 
+			 value = (NSString*)[settings valueForKey:@"Padding"];
+			 if( value )
+				 [_padding setStringValue:value];
+			 else
+				 [_padding setIntegerValue:0];
+			 
+			 
+			 value = (NSString*)[settings valueForKey:@"Frames"];
+			 if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
+				 [_drawFrame setState:NSOnState];
+			 else
+				 [_drawFrame setState:NSOffState];
+			 
+			 
+			 value = (NSString*)[settings valueForKey:@"CustomCharset"];
+			 [_customSet setString:value];
+			 
+			 
+			 value = (NSString*)[settings valueForKey:@"FontSize"];
+			 if( value )
+				 [_fontSize setStringValue:value];
+			 else
+				 [_fontSize setIntegerValue:16];
+			 
+			 value = (NSString*)[settings valueForKey:@"ExportFormat"];
+			 if( value && ( [value compare:@"XML"] == NSOrderedSame ) )
+				 [_fontFormat selectCellAtRow:1 column:0];
+			 else
+				 [_fontFormat selectCellAtRow:0 column:0];
+			 
+			 
+			 NSString* rColor = (NSString*)[settings valueForKey:@"FontColor.r"];
+			 NSString* gColor = (NSString*)[settings valueForKey:@"FontColor.g"];
+			 NSString* bColor = (NSString*)[settings valueForKey:@"FontColor.b"];
+			 NSString* aColor = (NSString*)[settings valueForKey:@"FontColor.a"];
+			 if( rColor != nil & gColor != nil & bColor != nil & aColor != nil )
+				 [_mainColor setColor:[NSColor colorWithCalibratedRed:[rColor floatValue]
+																green:[gColor floatValue]
+																 blue:[bColor floatValue]
+																alpha:[aColor floatValue]]];
+			 else
+				 [_mainColor setColor:[NSColor whiteColor]];
+			 
+			 
+			 value = (NSString*)[settings valueForKey:@"DrawOutline"];
+			 if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
+				 [_drawOutline setState:NSOnState];
+			 else
+				 [_drawOutline setState:NSOffState];
+			 
+			 
+			 value = (NSString*)[settings valueForKey:@"OutlineWidth"];
+			 [_outlineWidth setStringValue:value];
+			 
+			 
+			 rColor = (NSString*)[settings valueForKey:@"OutlineColor.r"];
+			 gColor = (NSString*)[settings valueForKey:@"OutlineColor.g"];
+			 bColor = (NSString*)[settings valueForKey:@"OutlineColor.b"];
+			 aColor = (NSString*)[settings valueForKey:@"OutlineColor.a"];
+			 if( rColor != nil & gColor != nil & bColor != nil & aColor != nil )
+				 [_outlineColor setColor:[NSColor colorWithCalibratedRed:[rColor floatValue]
+																   green:[gColor floatValue]
+																	blue:[bColor floatValue]
+																   alpha:[aColor floatValue]]];
+			 else
+				 [_outlineColor setColor:[NSColor blackColor]];
+			 
+			 
+			 value = (NSString*)[settings valueForKey:@"Charset0020"];
+			 if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
+				 [_charset0020 setState:NSOnState];
+			 else
+				 [_charset0020 setState:NSOffState];
+
+			 value = (NSString*)[settings valueForKey:@"Charset00A0"];
+			 if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
+				 [_charset00A0 setState:NSOnState];
+			 else
+				 [_charset00A0 setState:NSOffState];
+
+			 
+			 value = (NSString*)[settings valueForKey:@"Charset0400"];
+			 if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
+				 [_charset0400 setState:NSOnState];
+			 else
+				 [_charset0400 setState:NSOffState];
+			 
+			 value = (NSString*)[settings valueForKey:@"Charset3000"];
+			 if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
+				 [_charset3000 setState:NSOnState];
+			 else
+				 [_charset3000 setState:NSOffState];
+
+			 value = (NSString*)[settings valueForKey:@"Charset4E00"];
+			 if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
+				 [_charset4E00 setState:NSOnState];
+			 else
+				 [_charset4E00 setState:NSOffState];
+
+			 value = (NSString*)[settings valueForKey:@"CharsetXXXX"];
+			 if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
+				 [_charsetCustom setState:NSOnState];
+			 else
+				 [_charsetCustom setState:NSOffState];
+
+			 value = (NSString*)[settings valueForKey:@"TextureWidth"];
+			 if( value )
+				 [_textureWidth selectItemWithTitle:value];
+			 
+			 value = (NSString*)[settings valueForKey:@"TextureHeight"];
+			 if( value )
+				 [_textureHeight selectItemWithTitle:value];
+			 
+		 }
+	 }];
+}
+
+
+- (IBAction)saveSettings:(id)sender
+{
+	NSSavePanel* panel = [NSSavePanel savePanel];
+	if( _projectPath )
+		[panel setDirectoryURL:[NSURL fileURLWithPath:_projectPath isDirectory:YES]];
+	
+	
+	
+	[panel setNameFieldStringValue:[NSString stringWithFormat:@"%s_%s_%li.rfm",
+													FontMaker::instance()->fontName(), FontMaker::instance()->styleName(), [_fontSize integerValue] ]];
+	
+	[panel setCanSelectHiddenExtension:YES];
+//	[panel setCanChooseFiles:YES];
+//	[panel setAllowsMultipleSelection:NO];
+	[panel setAllowedFileTypes:[NSArray arrayWithObject:@"rfm"]];
+	
+	[panel beginSheetModalForWindow:_window completionHandler:^(NSInteger result)
+	 {
+		 if( result == NSFileHandlingPanelOKButton )
+		 {
+//			 NSString* fileName = [[panel.URL URLByDeletingPathExtension] lastPathComponent];
+			 
+			 if( _projectPath )
+				 [_projectPath release];
+			 _projectPath = [[[panel URL] path] retain];
+
+			 NSColor* fontColor = [[_mainColor color] colorUsingColorSpace:[NSColorSpace genericRGBColorSpace]];
+			 NSColor* outlineColor = [[_outlineColor color] colorUsingColorSpace:[NSColorSpace genericRGBColorSpace]];
+
+			 NSMutableDictionary* settings = [NSMutableDictionary dictionary];
+			 
+			 if( _savePath )
+				 [settings setValue:_savePath forKey:@"SavePath"];
+			 if( _fontPath )
+				 [settings setValue:_fontPath forKey:@"FontPath"];
+			 if( _charsetPath )
+				 [settings setValue:_charsetPath forKey:@"CharsetPath"];
+
+			 [settings setValue:[_padding stringValue] forKey:@"Padding"];
+			 [settings setValue:( ( [_drawFrame state] == NSOnState ) ? @"Yes" : @"No" ) forKey:@"Frames"];
+			 [settings setValue:[_customSet string] forKey:@"CustomCharset"];
+			 [settings setValue:[_fontSize stringValue] forKey:@"FontSize"];
+			 [settings setValue:( [_fontFormat selectedRow] == 0 ) ? @"TXT" : @"XML" forKey:@"ExportFormat"];
+			 [settings setValue:[NSString stringWithFormat:@"%f",[fontColor redComponent]] forKey:@"FontColor.r"];
+			 [settings setValue:[NSString stringWithFormat:@"%f",[fontColor greenComponent]] forKey:@"FontColor.g"];
+			 [settings setValue:[NSString stringWithFormat:@"%f",[fontColor blueComponent]] forKey:@"FontColor.b"];
+			 [settings setValue:[NSString stringWithFormat:@"%f",[fontColor alphaComponent]] forKey:@"FontColor.a"];
+			 [settings setValue:( ( [_drawOutline state] == NSOnState ) ? @"Yes" : @"No" ) forKey:@"DrawOutline"];
+			 [settings setValue:[_outlineWidth stringValue] forKey:@"OutlineWidth"];
+			 [settings setValue:[NSString stringWithFormat:@"%f",[outlineColor redComponent]] forKey:@"OutlineColor.r"];
+			 [settings setValue:[NSString stringWithFormat:@"%f",[outlineColor greenComponent]] forKey:@"OutlineColor.g"];
+			 [settings setValue:[NSString stringWithFormat:@"%f",[outlineColor blueComponent]] forKey:@"OutlineColor.b"];
+			 [settings setValue:[NSString stringWithFormat:@"%f",[outlineColor alphaComponent]] forKey:@"OutlineColor.a"];
+			 [settings setValue:( ( [_charset0020 state] == NSOnState ) ? @"Yes" : @"No" ) forKey:@"Charset0020"];
+			 [settings setValue:( ( [_charset00A0 state] == NSOnState ) ? @"Yes" : @"No" ) forKey:@"Charset00A0"];
+			 [settings setValue:( ( [_charset0400 state] == NSOnState ) ? @"Yes" : @"No" ) forKey:@"Charset0400"];
+			 [settings setValue:( ( [_charset3000 state] == NSOnState ) ? @"Yes" : @"No" ) forKey:@"Charset3000"];
+			 [settings setValue:( ( [_charset4E00 state] == NSOnState ) ? @"Yes" : @"No" ) forKey:@"Charset4E00"];
+			 [settings setValue:( ( [_charsetCustom state] == NSOnState ) ? @"Yes" : @"No" ) forKey:@"CharsetXXXX"];
+			 [settings setValue:[_textureWidth titleOfSelectedItem] forKey:@"TextureWidth"];
+			 [settings setValue:[_textureHeight titleOfSelectedItem] forKey:@"TextureHeight"];
+			 
+			 [settings writeToURL:[panel URL] atomically:YES];
+		 }
+	 }];
+}
+
+
+- (IBAction)nextPage:(id)sender
+{
+	if( _currentPage + 1 < FontMaker::instance()->pageCount() )
+	{
+		++_currentPage;
+		[self previewPage:_currentPage];
+	}
+}
+
+
+- (IBAction)lastPage:(id)sender
+{
+	if( _currentPage > 0 )
+	{
+		--_currentPage;
+		[self previewPage:_currentPage];
+	}
+}
+
 
 
 @end
