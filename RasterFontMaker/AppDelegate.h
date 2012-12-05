@@ -12,7 +12,9 @@
 {
 	NSString* _fontPath;
 	NSString* _savePath;
+	NSString* _projectPath;
 	NSString* _charsetPath;
+	int _currentPage;
 }
 
 @property (assign) IBOutlet NSWindow* window;
@@ -36,6 +38,9 @@
 @property (assign) IBOutlet NSPopUpButton*	textureWidth;
 @property (assign) IBOutlet NSPopUpButton*	textureHeight;
 @property (assign) IBOutlet NSPopUpButton*	fontStyle;
+@property (assign) IBOutlet NSTextField* pageOfPages;
+@property (assign) IBOutlet NSButton* showNextPage;
+@property (assign) IBOutlet NSButton* showLastPage;
 
 
 - (IBAction)updateImage:(id)sender;
@@ -46,12 +51,21 @@
 - (IBAction)chooseLoadFontWithStyle:(id)sender;
 - (IBAction)fetchCharSet:(id)sender;
 
-- (void)saveSettings;
-- (void)loadSettings;
+- (IBAction)loadSettings:(id)sender;
+- (IBAction)saveSettings:(id)sender;
+
+- (IBAction)nextPage:(id)sender;
+- (IBAction)lastPage:(id)sender;
+
+
+- (void)saveLastSettings;
+- (void)loadLastSettings;
 - (void)applySettings;
 - (void)applyCharSets;
 - (void)exportFontWithName:(NSString*)fileName andPath:(NSString*)path;
 
 - (void)updateFontStyles;
+
+- (void)previewPage:(int)page;
 
 @end

@@ -982,7 +982,8 @@ int FontMaker::layoutChars()
 	
 	++_pageCount;
 	
-	return _pageCount;}
+	return _pageCount;
+}
 
 
 //---------------------------------------------------------------------------------
