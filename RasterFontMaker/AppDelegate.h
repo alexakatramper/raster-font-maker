@@ -41,6 +41,7 @@
 @property (assign) IBOutlet NSTextField* pageOfPages;
 @property (assign) IBOutlet NSButton* showNextPage;
 @property (assign) IBOutlet NSButton* showLastPage;
+@property (assign) IBOutlet NSButton* ignoreMissing;
 
 
 - (IBAction)updateImage:(id)sender;

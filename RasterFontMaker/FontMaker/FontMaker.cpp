@@ -16,9 +16,11 @@
 
 #include <string>
 #include <vector>
+#include <set>
 
 using std::string;
 using std::vector;
+using std::set;
 
 FontMaker* FontMaker::_instance = 0;
 
@@ -798,8 +800,8 @@ bool FontMaker::strokeChars()
 	FT_Glyph glyph;
 	CharInfo* ci = 0;
 	_lineHeight = 0;
-	int maxYOffset = 0;
-	int minYOffset = 100500;
+//	int maxYOffset = 0;
+//	int minYOffset = 100500;
 
 	
 	// Set up a stroker.
@@ -810,6 +812,8 @@ bool FontMaker::strokeChars()
 				   FT_STROKER_LINECAP_ROUND,
 				   FT_STROKER_LINEJOIN_ROUND,
 				   0 );
+	
+	set<FT_UInt> missing;
 	
 	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
 	{
@@ -825,6 +829,7 @@ bool FontMaker::strokeChars()
 		{
 			result = false;
 			printf( "WARNING: no glyph for charcode 0x%X\n", ci->charcode );
+			missing.insert( ci->charcode );
 		}
 		
 		FT_Load_Glyph( _face, glyph_index, FT_LOAD_DEFAULT );
@@ -890,6 +895,14 @@ bool FontMaker::strokeChars()
 //			minYOffset = ci->yoffset;
 
 		ci->updateMetrics( _padding );
+	}
+	
+	if( _removeMissing )
+	{
+		for( set<FT_UInt>::iterator it = missing.begin(); it != missing.end(); it++ )
+		{
+			_charSet.erase( *it );
+		}
 	}
 	
 	// update yoffset for all

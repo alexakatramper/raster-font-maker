@@ -233,6 +233,8 @@ public:
 	
 	int pageCount() { return _pageCount; }
 	
+	void setRemoveMissing( bool state ) { _removeMissing = state; }
+	
 private:
 	FT_Library	_library;
 	FT_Face		_face;
@@ -249,6 +251,7 @@ private:
 	PixelData32	_outlineColor;
 	
 	int			_flags;
+	bool		_removeMissing;
 	
 	vector<string>	_faceNames;
 };
