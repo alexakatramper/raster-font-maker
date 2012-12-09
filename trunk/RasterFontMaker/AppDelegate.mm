@@ -551,7 +551,7 @@
 	
 	[self applyCharSets];
 
-	
+	maker->setRemoveMissing( [_ignoreMissing state] == NSOnState );
 	maker->setDrawFrames( [_drawFrame state] == NSOnState );
 		
 	NSInteger pad = [_padding integerValue];
