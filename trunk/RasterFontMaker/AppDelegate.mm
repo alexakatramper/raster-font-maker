@@ -254,7 +254,15 @@
 		maker->addCharRange( 0x00A0, 0x00FF);
 
 	if( [_charset0400 state] == NSOnState )
-		maker->addCharRange( 0x0400, 0x04FF);
+	{
+		maker->addCharRange( 0x0410, 0x044F );
+		maker->addChar( 0x0404 );
+		maker->addChar( 0x0454 );
+		maker->addChar( 0x0406 );
+		maker->addChar( 0x0456 );
+		maker->addChar( 0x0407 );
+		maker->addChar( 0x0457 );
+	}
 
 	if( [_charset3000 state] == NSOnState )
 		maker->addCharRange( 0x3000, 0x30FF);
