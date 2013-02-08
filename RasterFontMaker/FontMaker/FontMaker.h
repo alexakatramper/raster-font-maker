@@ -67,7 +67,7 @@ struct CharInfo
 //			FT_Done_Glyph( glyph ); // TODO: fix crash here!
 	}
 	
-	static bool compareByHeight( const CharInfo& i, const CharInfo& j ) { return ( i.height < j.height ); }
+	static bool compareByHeight( const CharInfo* i, const CharInfo* j ) { return ( i->height < j->height ); }
 	
 	void updateMetrics( int padding )
 	{

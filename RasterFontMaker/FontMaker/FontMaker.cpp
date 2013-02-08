@@ -932,9 +932,23 @@ int FontMaker::layoutChars()
 
 	vector<CharInfo*> charLine;
 	
+	vector<CharInfo*> allChars;
+	allChars.reserve( _charSet.size() );
 	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
 	{
-		ci = &(*it).second;
+		allChars.push_back( &it->second );
+	}
+
+	sort( allChars.begin(), allChars.end(), CharInfo::compareByHeight );
+	
+	
+//	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
+//	{
+//		ci = &(*it).second;
+
+	for( size_t i = 0; i < allChars.size(); i++ )
+	{
+		ci = allChars[i];
 		
 		if( ( x + ci->width ) > _imageWidth )
 		{
