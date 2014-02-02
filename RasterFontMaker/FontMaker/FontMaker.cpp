@@ -425,7 +425,7 @@ void FontMaker::drawPage( int page, int* abgr )
 			FT_Done_Glyph( glyph );
 		}
 
-		if( _flags & DRAW_BODY )
+//		if( _flags & DRAW_BODY ) // draw this always
 		{
 			// copy glyph so we can use original one again after rendering
 			FT_Glyph_Copy( ci->glyph, &glyph );
@@ -730,6 +730,18 @@ void FontMaker::setDrawFrames( bool state )
 		_flags &= ~DRAW_BBOX;
 }
 
+//---------------------------------------------------------------------------------
+//	setDoFill()
+//---------------------------------------------------------------------------------
+void FontMaker::setDoFill( bool state )
+{
+	if( state )
+		_flags |= DRAW_BODY;
+	else
+		_flags &= ~DRAW_BODY;
+}
+
+
 
 //---------------------------------------------------------------------------------
 //	setDrawOutline()
@@ -866,7 +878,7 @@ bool FontMaker::strokeChars()
 			FT_Done_Glyph( glyph );
 		}
 		
-		if( _flags & DRAW_BODY )
+//		if( _flags & DRAW_BODY ) // draw this always
 		{
 			FT_Glyph_Copy( ci->glyph, &glyph );
 			
@@ -1020,7 +1032,7 @@ void FontMaker::drawChars( int page, PixelData32* buf )
 {
 	CharInfo* ci = 0;
 	
-	memset( buf, 0, _imageHeight * _imageWidth * sizeof( PixelData32 ) );
+//	memset( buf, 0, _imageHeight * _imageWidth * sizeof( PixelData32 ) );
 	
 	for( CharSetIt it = _charSet.begin(); it != _charSet.end(); it++ )
 	{
@@ -1068,6 +1080,14 @@ void FontMaker::drawChars( int page, PixelData32* buf )
 					buf[pixIndex].g = _fontColor.g;
 					buf[pixIndex].b = _fontColor.b;
 					buf[pixIndex].a = it->coverage;
+				}
+				
+				if( ( _flags & DRAW_BODY ) == 0 )
+				{
+					buf[pixIndex].r = _outlineColor.r;
+					buf[pixIndex].g = _outlineColor.g;
+					buf[pixIndex].b = _outlineColor.b;
+					buf[pixIndex].a = 255 - it->coverage;
 				}
 				++pixIndex;
 			}

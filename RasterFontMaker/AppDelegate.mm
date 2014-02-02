@@ -102,6 +102,35 @@
 	// draw to image
 	unsigned char* data = [bmp bitmapData];
 	int* rgbaData = (int*)data;
+	
+	// try to make checked background
+	int* tmpData = (int*)data;
+	int n = 0;
+	int lightGray = 0xFF7F7F7F;
+	int darkGray =	0xFF3F3F3F;
+	int currentFill = lightGray;
+	for( int y = 0; y < height; y++ )
+	{
+		if( ( y / 16 ) & 1 )
+		{
+			currentFill = lightGray;
+		}
+		else
+		{
+			currentFill = darkGray;
+		}
+		
+		for( int x = 0; x < width; x++ )
+		{
+			*tmpData = currentFill;
+			if( ( x % 16 ) == 0 )
+			{
+				currentFill = ( currentFill == lightGray ) ? darkGray : lightGray;
+			}
+			++tmpData;
+		}
+	}
+	
 //	maker->drawPage( 0, rgbaData );
 	maker->drawChars( page, (PixelData32*)rgbaData );
 
@@ -401,6 +430,8 @@
 	CFPreferencesSetAppValue( CFSTR("FontColor.b"), [NSString stringWithFormat:@"%f",[color blueComponent]], kCFPreferencesCurrentApplication );
 	CFPreferencesSetAppValue( CFSTR("FontColor.a"), [NSString stringWithFormat:@"%f",[color alphaComponent]], kCFPreferencesCurrentApplication );
 
+	CFPreferencesSetAppValue( CFSTR("DrawFill"), ( ( [_fill state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
+
 	
 	CFPreferencesSetAppValue( CFSTR("DrawOutline"), ( ( [_drawOutline state] == NSOnState ) ? CFSTR("Yes") : CFSTR("No") ), kCFPreferencesCurrentApplication );
 	CFPreferencesSetAppValue( CFSTR("OutlineWidth"), [_outlineWidth stringValue], kCFPreferencesCurrentApplication );
@@ -485,6 +516,11 @@
 	else
 		[_mainColor setColor:[NSColor whiteColor]];
 	
+	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("DrawFill"), kCFPreferencesCurrentApplication );
+	if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
+		[_fill setState:NSOnState];
+	else
+		[_fill setState:NSOffState];
 	
 	value = (NSString*)CFPreferencesCopyAppValue( CFSTR("DrawOutline"), kCFPreferencesCurrentApplication );
 	if( value && ( [value compare:@"Yes"] == NSOrderedSame ) )
@@ -568,6 +604,7 @@
 	NSInteger fSize = [_fontSize integerValue];
 	maker->setFontSize( (int)fSize );
 
+	maker->setDoFill( [_fill state] == NSOnState );
 
 	maker->setDrawOutline( [_drawOutline state] == NSOnState );
 	maker->setOutlineWidth( [_outlineWidth floatValue] );

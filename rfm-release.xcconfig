@@ -1,0 +1,9 @@
+//
+//  rfm-release.xcconfig
+//  RasterFontMaker
+//
+//  Created by Alexey Schutsky on 2/2/14.
+//  Copyright (c) 2014 Alexey Schutsky. All rights reserved.
+//
+
+COPY_PHASE_STRIP = YES

@@ -24,6 +24,7 @@
 @property (assign) IBOutlet NSTextField* padding;
 @property (assign) IBOutlet NSTextField* fontSize;
 @property (assign) IBOutlet NSTextField* fontName;
+@property (assign) IBOutlet NSButton* fill;
 @property (assign) IBOutlet NSButton* drawOutline;
 @property (assign) IBOutlet NSTextField* outlineWidth;
 @property (assign) IBOutlet NSColorWell* mainColor;
