@@ -206,6 +206,9 @@ public:
 	void exportTXT( const char* fileName, const char* path );
 
 	void setDrawFrames( bool state );
+	
+	void setDoFill( bool state );
+
 	void setDrawOutline( bool state );
 
 	void setPadding( int value ) { _padding = value; }
