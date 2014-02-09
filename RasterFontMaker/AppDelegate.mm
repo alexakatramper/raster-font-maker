@@ -105,7 +105,7 @@
 	
 	// try to make checked background
 	int* tmpData = (int*)data;
-	int n = 0;
+//	int n = 0;
 	int lightGray = 0xFF7F7F7F;
 	int darkGray =	0xFF3F3F3F;
 	int currentFill = lightGray;
